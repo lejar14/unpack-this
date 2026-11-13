@@ -1,126 +1,228 @@
 <!doctype html>
 <!--
-  unpack-this report template. Keep styles unchanged; only fill content.
+  unpack-this report template. Keep styles and scripts unchanged; only fill content.
 
-  Placeholders: {{LANG}} {{PROJECT_NAME}} {{GENERATED_DATE}} {{REPO_PATH}}
+  Placeholders: {{LANG}} {{PROJECT_NAME}} {{PURPOSE}} {{REPO_PATH}} {{GENERATED_DATE}} {{STACK_SUMMARY}}
+    {{PURPOSE}}        one sentence: what the application is for
+    {{STACK_SUMMARY}}  short, e.g. "Laravel 10 · MySQL · Redis"
 
-  Components:
+  Components (use only these):
+    Paragraph:    <p>...</p>  (prose column is capped at a readable width)
+    Facts list:   <dl class="facts"><div><dt>Framework</dt><dd>Laravel 10</dd></div>...</dl>
     Badge:        <span class="badge">Laravel 10</span>  variants: .ok .warn .risk
-    File chip:    <code class="file">src/app/Http/Controllers/OrderController.php:42</code>
-    Callout:      <div class="callout warn"><strong>Title</strong><p>Text</p></div>  variants: .info .warn .risk
-    Card grid:    <div class="grid"><div class="card"><h4>Title</h4><p>Text</p></div></div>
+    Inferred:     <span class="badge warn">inferred</span>
+    File ref:     <code class="file">app/Http/Controllers/OrderController.php:42</code>
+    Note:         <div class="note"><strong>Title</strong><p>Text</p></div>  variants: .warn .risk
     Flow steps:   <ol class="flow"><li>Register</li><li>Order</li><li>Pay</li></ol>
-    Table:        <table class="filterable"> gets a search box automatically
+    Table:        <table class="filterable"> gets a filter box; plain <table> does not
+    Finding:      <div class="finding risk"><span class="sev">High</span><div><h4>Title</h4><p>Text</p><code class="file">path</code></div></div>
+                  variants: .risk .warn .info  (sev label text in the report language)
     Collapsible:  <details><summary>Title</summary><div>...</div></details>
-    Diagram:      <pre class="mermaid">sequenceDiagram ...</pre>  (Mermaid syntax, rendered by Pele)
-    Inferred tag: <span class="badge warn">inferred</span>
+    Diagram:      <figure><pre class="mermaid">sequenceDiagram ...</pre><figcaption>Checkout flow</figcaption></figure>
+                  (Mermaid syntax, rendered by Pele)
 -->
 <html lang="{{LANG}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>{{PROJECT_NAME}} · Handover Report</title>
 <style>
   :root {
-    --bg: #f7f7f5; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --border: #e3e2dd;
-    --accent: #2f5d8a; --ok: #2e7d4f; --warn: #a86b00; --risk: #b3261e;
-    --ok-bg: #e8f3ec; --warn-bg: #fbf2e0; --risk-bg: #fbe9e7; --info-bg: #e8eff6;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --ground: #f3f4f1; --paper: #fbfbf9; --ink: #161b18; --ink-2: #4a524d; --line: #d3d8d2; --rule: #161b18;
+    --accent: #0d5e50; --accent-tint: #dfebe6;
+    --ok: #2a6a3c; --ok-tint: #e1eee4; --warn: #865700; --warn-tint: #f6ecd8; --risk: #a3271d; --risk-tint: #f7e3df;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --measure: 70ch;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #161615; --surface: #1f1f1d; --text: #e9e8e4; --muted: #a09f99; --border: #33322f;
-      --accent: #7fb0e0; --ok: #6cc28f; --warn: #e0a73a; --risk: #f08a80;
-      --ok-bg: #1d2b22; --warn-bg: #2e2617; --risk-bg: #321d1b; --info-bg: #1b2532;
+      --ground: #111513; --paper: #171c19; --ink: #e4e9e5; --ink-2: #a2aca5; --line: #2c342f; --rule: #e4e9e5;
+      --accent: #72c8b1; --accent-tint: #173029;
+      --ok: #80cf98; --ok-tint: #18291e; --warn: #e2b050; --warn-tint: #2c2414; --risk: #f08b80; --risk-tint: #321c19;
     }
   }
+
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 var(--sans); }
-  .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
-  nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 16px; border-right: 1px solid var(--border); }
-  nav .brand { font-weight: 700; margin-bottom: 4px; }
-  nav .meta { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
-  nav a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 14px; }
-  nav a:hover, nav a.active { background: var(--surface); color: var(--text); }
-  main { padding: 32px 40px 80px; max-width: 1100px; }
-  header h1 { margin: 0 0 4px; font-size: 28px; }
-  header p { margin: 0 0 28px; color: var(--muted); }
-  section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin-bottom: 24px; scroll-margin-top: 16px; }
-  h2 { margin-top: 0; font-size: 20px; }
-  h3 { font-size: 16px; margin: 24px 0 8px; }
-  h4 { margin: 0 0 6px; font-size: 15px; }
-  a { color: var(--accent); }
-  code { font-family: var(--mono); font-size: 13px; }
-  code.file { background: var(--info-bg); color: var(--accent); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--info-bg); color: var(--accent); margin: 2px 2px 2px 0; }
-  .badge.ok { background: var(--ok-bg); color: var(--ok); }
-  .badge.warn { background: var(--warn-bg); color: var(--warn); }
-  .badge.risk { background: var(--risk-bg); color: var(--risk); }
-  .callout { border-left: 4px solid var(--accent); background: var(--info-bg); padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
-  .callout.warn { border-color: var(--warn); background: var(--warn-bg); }
-  .callout.risk { border-color: var(--risk); background: var(--risk-bg); }
-  .callout p { margin: 4px 0 0; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-  .card p { margin: 0; color: var(--muted); font-size: 14px; }
-  ol.flow { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  ol.flow li { background: var(--info-bg); color: var(--accent); padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 14px; }
-  ol.flow li + li::before { content: "→"; color: var(--muted); margin-right: 8px; }
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
-  input.filter { width: 100%; max-width: 320px; padding: 7px 10px; margin: 0 0 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
-  details { border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
-  details summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
-  details > div { padding: 0 14px 12px; }
+  html { scroll-behavior: smooth; scrollbar-color: var(--line) transparent; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; caret-color: var(--accent); }
+  ::selection { background: var(--accent); color: var(--paper); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* Frame */
+  .layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+  nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 28px 20px; background: var(--paper); border-right: 1px solid var(--line); }
+  nav .project { font-weight: 650; font-size: 15px; line-height: 1.3; letter-spacing: -0.01em; }
+  nav .doc { color: var(--ink-2); font-size: 13px; margin: 2px 0 28px; }
+  nav ol { list-style: none; margin: 0; padding: 0; counter-reset: nav; }
+  nav li { counter-increment: nav; }
+  nav a { display: grid; grid-template-columns: 22px 1fr; padding: 7px 10px 7px 8px; margin-left: -8px; border-radius: 6px; color: var(--ink-2); text-decoration: none; font-size: 14px; line-height: 1.35; transition: color .15s, background-color .15s; }
+  nav a::before { content: counter(nav); font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .7; font-weight: 600; transition: color .15s; }
+  nav a:hover { color: var(--ink); background: var(--ground); }
+  nav a[aria-current] { color: var(--ink); font-weight: 600; background: var(--accent-tint); }
+  nav a[aria-current]::before { color: var(--accent); }
+  main { padding: 40px clamp(20px, 5vw, 64px) 96px; max-width: 1180px; }
+
+  /* Title block: the drawing-sheet masthead */
+  .titleblock { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); border: 1.5px solid var(--rule); background: var(--paper); margin-bottom: 56px; }
+  .titleblock .name { padding: 24px 28px 26px; border-right: 1.5px solid var(--rule); }
+  .titleblock h1 { margin: 0; font-size: 34px; line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; text-wrap: balance; }
+  .titleblock .purpose { margin: 12px 0 0; color: var(--ink-2); font-size: 17px; line-height: 1.5; max-width: 52ch; }
+  .titleblock dl { margin: 0; display: grid; grid-auto-rows: 1fr; }
+  .titleblock dl div { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .titleblock dl div:last-child { border-bottom: 0; }
+  .titleblock dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .titleblock dd { margin: 2px 0 0; font-size: 14px; font-weight: 550; overflow-wrap: anywhere; }
+
+  /* Sections */
+  section { padding-top: 22px; border-top: 1.5px solid var(--rule); margin-bottom: 64px; scroll-margin-top: 24px; }
+  h2 { margin: 0 0 20px; font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; text-wrap: balance; }
+  h3 { margin: 36px 0 10px; font-size: 19px; line-height: 1.3; letter-spacing: -0.01em; font-weight: 650; }
+  h4 { margin: 0 0 4px; font-size: 16px; line-height: 1.35; font-weight: 650; }
+  section > p, section > ul, section > ol:not(.flow), details p, .note p { max-width: var(--measure); }
+  p { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; margin: 0 0 14px; }
+  li { margin: 4px 0; }
+  li::marker { color: var(--ink-2); }
+  code { font-family: var(--mono); font-size: .86em; }
+  :not(pre) > code:not(.file) { background: var(--paper); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+  code.file { color: var(--accent); background: var(--accent-tint); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+
+  /* Facts list */
+  dl.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin: 0 0 18px; border-top: 1px solid var(--line); }
+  dl.facts div { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--line); }
+  dl.facts dt { font-size: 13px; color: var(--ink-2); }
+  dl.facts dd { margin: 2px 0 0; font-weight: 550; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 0 7px; border-radius: 4px; font-size: 12px; line-height: 20px; font-weight: 600; background: var(--accent-tint); color: var(--accent); vertical-align: 1px; white-space: nowrap; }
+  .badge.ok { background: var(--ok-tint); color: var(--ok); }
+  .badge.warn { background: var(--warn-tint); color: var(--warn); }
+  .badge.risk { background: var(--risk-tint); color: var(--risk); }
+
+  /* Note */
+  .note { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 14px 18px; margin: 18px 0; max-width: calc(var(--measure) + 40px); }
+  .note > strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .note.warn { background: var(--warn-tint); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+  .note.warn > strong { color: var(--warn); }
+  .note.risk { background: var(--risk-tint); border-color: color-mix(in srgb, var(--risk) 30%, transparent); }
+  .note.risk > strong { color: var(--risk); }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* Flow steps: numbered stations on one line */
+  ol.flow { list-style: none; padding: 0; margin: 20px 0 28px; display: flex; flex-wrap: wrap; row-gap: 14px; counter-reset: step; }
+  ol.flow li { counter-increment: step; display: flex; align-items: center; margin: 0; font-weight: 600; font-size: 15px; }
+  ol.flow li::before { content: counter(step); display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border: 1.5px solid var(--accent); border-radius: 50%; color: var(--accent); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  ol.flow li:not(:last-child)::after { content: ""; width: 36px; height: 1.5px; margin: 0 12px; background: var(--ink-2); opacity: .5; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 0 0 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+  table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  td code.file { overflow-wrap: normal; white-space: nowrap; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  th { position: sticky; top: 0; background: var(--paper); font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  tbody tr:hover { background: var(--ground); }
+  td:first-child { font-weight: 600; }
+  .filter { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+  .filter input { width: min(100%, 320px); padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; }
+  .filter input:focus-visible { border-color: var(--accent); outline-offset: 0; }
+  .filter output { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.empty td { color: var(--ink-2); font-weight: 400; text-align: center; }
+
+  /* Findings */
+  .finding { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .finding:first-of-type { border-top: 1px solid var(--line); }
+  .finding .sev { align-self: start; text-align: center; padding: 2px 0; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--accent-tint); color: var(--accent); }
+  .finding.risk .sev { background: var(--risk-tint); color: var(--risk); }
+  .finding.warn .sev { background: var(--warn-tint); color: var(--warn); }
+  .finding p { max-width: var(--measure); margin-bottom: 6px; }
+
+  /* Collapsible */
+  details { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0; background: var(--paper); }
+  details summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 10px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--ink-2); border-bottom: 1.5px solid var(--ink-2); transform: rotate(-45deg); transition: transform .15s; flex: none; }
+  details[open] summary::before { transform: rotate(45deg); }
+  details > div { padding: 0 16px 14px 33px; }
+
+  /* Diagrams */
+  figure { margin: 20px 0 32px; }
+  figcaption { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
   pre.mermaid {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; text-align: center;
-    --pele-bg: var(--bg); --pele-fg: var(--text); --pele-muted: var(--muted); --pele-line: var(--muted);
-    --pele-surface: var(--surface); --pele-surface-alt: var(--info-bg); --pele-border: var(--border);
+    margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; overflow-x: auto; text-align: center;
+    --pele-bg: var(--paper); --pele-fg: var(--ink); --pele-muted: var(--ink-2); --pele-line: var(--ink-2);
+    --pele-surface: var(--ground); --pele-surface-alt: var(--accent-tint); --pele-border: var(--line);
     --pele-accent: var(--accent); --pele-error: var(--risk); --pele-font: var(--sans); --pele-font-mono: var(--mono);
   }
-  pre.mermaid.error { text-align: left; white-space: pre-wrap; border-color: var(--risk); }
-  @media (max-width: 800px) {
-    .layout { grid-template-columns: 1fr; }
-    nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
-    main { padding: 20px 16px 60px; }
+  pre.mermaid.error { text-align: left; white-space: pre-wrap; font-size: 13px; color: var(--ink-2); border-color: var(--risk); }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    nav { position: sticky; top: 0; z-index: 2; height: auto; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+    nav .project, nav .doc { display: none; }
+    nav ol { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    nav a { margin: 0; white-space: nowrap; grid-template-columns: 18px auto; }
+    main { padding-top: 24px; }
+    section { scroll-margin-top: 64px; }
+    .titleblock { grid-template-columns: 1fr; margin-bottom: 40px; }
+    .titleblock .name { border-right: 0; border-bottom: 1.5px solid var(--rule); padding: 20px; }
+    .titleblock h1 { font-size: 28px; }
+    .finding { grid-template-columns: 1fr; gap: 8px; }
+    .finding .sev { justify-self: start; padding: 2px 8px; }
   }
-  @media print { nav, input.filter { display: none; } .layout { display: block; } section { break-inside: avoid; } }
+  @media print {
+    nav, .filter { display: none; }
+    .layout { display: block; }
+    body { background: #fff; }
+    section, figure, .finding { break-inside: avoid; }
+  }
 </style>
 </head>
 <body>
 <div class="layout">
-  <nav>
-    <div class="brand">{{PROJECT_NAME}}</div>
-    <div class="meta">Handover report · {{GENERATED_DATE}}</div>
-    <a href="#summary">1. Executive Summary</a>
-    <a href="#business-process">2. Business Process</a>
-    <a href="#features">3. Feature Inventory</a>
-    <a href="#workflows">4. System Workflows</a>
-    <a href="#gotchas">5. Handover Gotchas</a>
+  <nav aria-label="Report sections">
+    <div class="project">{{PROJECT_NAME}}</div>
+    <div class="doc">Handover report</div>
+    <ol>
+      <li><a href="#summary">Executive Summary</a></li>
+      <li><a href="#business-process">Business Process</a></li>
+      <li><a href="#features">Feature Inventory</a></li>
+      <li><a href="#workflows">System Workflows</a></li>
+      <li><a href="#gotchas">Handover Gotchas</a></li>
+    </ol>
   </nav>
   <main>
-    <header>
-      <h1>{{PROJECT_NAME}}</h1>
-      <p><code>{{REPO_PATH}}</code> · generated {{GENERATED_DATE}}</p>
+    <header class="titleblock">
+      <div class="name">
+        <h1>{{PROJECT_NAME}}</h1>
+        <p class="purpose">{{PURPOSE}}</p>
+      </div>
+      <dl>
+        <div><dt>Document</dt><dd>Handover report</dd></div>
+        <div><dt>Repository</dt><dd><code>{{REPO_PATH}}</code></dd></div>
+        <div><dt>Stack</dt><dd>{{STACK_SUMMARY}}</dd></div>
+        <div><dt>Generated</dt><dd>{{GENERATED_DATE}}</dd></div>
+      </dl>
     </header>
 
-    <section id="summary"><h2>1. Executive Summary &amp; Tech Stack</h2>
+    <section id="summary"><h2>Executive Summary &amp; Tech Stack</h2>
       <!-- content -->
     </section>
-    <section id="business-process"><h2>2. Business Process &amp; User Roles</h2>
+    <section id="business-process"><h2>Business Process &amp; User Roles</h2>
       <!-- content -->
     </section>
-    <section id="features"><h2>3. Feature Inventory</h2>
+    <section id="features"><h2>Feature Inventory</h2>
       <!-- content: <table class="filterable"> -->
     </section>
-    <section id="workflows"><h2>4. System &amp; Technical Workflows</h2>
-      <!-- content: <pre class="mermaid"> per flow -->
+    <section id="workflows"><h2>System &amp; Technical Workflows</h2>
+      <!-- content: one <figure> per flow -->
     </section>
-    <section id="gotchas"><h2>5. Handover Gotchas</h2>
-      <!-- content -->
+    <section id="gotchas"><h2>Handover Gotchas</h2>
+      <!-- content: .finding rows, then running locally and open questions -->
     </section>
   </main>
 </div>
@@ -129,26 +231,40 @@
     const wrap = document.createElement("div"); wrap.className = "table-wrap";
     t.replaceWith(wrap); wrap.appendChild(t);
     if (!t.classList.contains("filterable")) return;
-    const input = Object.assign(document.createElement("input"), { className: "filter", type: "search", placeholder: "Filter…" });
-    input.setAttribute("aria-label", "Filter table");
-    wrap.before(input);
-    input.addEventListener("input", () => {
-      const q = input.value.toLowerCase();
-      t.querySelectorAll("tbody tr").forEach(r => r.hidden = !r.textContent.toLowerCase().includes(q));
-    });
+    const rows = [...t.querySelectorAll("tbody tr")];
+    const bar = document.createElement("div"); bar.className = "filter";
+    bar.innerHTML = '<input type="search" placeholder="Filter rows" aria-label="Filter table rows"><output aria-live="polite"></output>';
+    wrap.before(bar);
+    const [input, count] = bar.children;
+    const empty = document.createElement("tr"); empty.className = "empty"; empty.hidden = true;
+    empty.innerHTML = `<td colspan="${t.rows[0]?.cells.length || 1}">No rows match</td>`;
+    t.tBodies[0]?.appendChild(empty);
+    const apply = () => {
+      const q = input.value.trim().toLowerCase(); let shown = 0;
+      rows.forEach(r => { r.hidden = !r.textContent.toLowerCase().includes(q); if (!r.hidden) shown++; });
+      empty.hidden = shown > 0;
+      count.textContent = q ? `${shown} of ${rows.length}` : `${rows.length} rows`;
+    };
+    input.addEventListener("input", apply); apply();
   });
+
   const links = [...document.querySelectorAll("nav a")];
-  const obs = new IntersectionObserver(entries => entries.forEach(e => {
-    if (e.isIntersecting) links.forEach(a => a.classList.toggle("active", a.hash === "#" + e.target.id));
-  }), { rootMargin: "-20% 0px -70% 0px" });
-  document.querySelectorAll("section").forEach(s => obs.observe(s));
+  const sections = links.map(a => document.querySelector(a.hash)).filter(Boolean);
+  const markActive = () => {
+    const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+    let current = sections[0];
+    for (const s of sections) if (s.getBoundingClientRect().top <= innerHeight * 0.3) current = s;
+    if (atEnd) current = sections[sections.length - 1];
+    links.forEach(a => a.hash === "#" + current.id ? a.setAttribute("aria-current", "location") : a.removeAttribute("aria-current"));
+  };
+  addEventListener("scroll", markActive, { passive: true }); markActive();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js"></script>
 <script>
   document.querySelectorAll("pre.mermaid").forEach(el => {
     const src = el.textContent;
     try { pele.mount(el, src); }
-    catch (e) { el.classList.add("error"); el.textContent = e.message + "\n\n" + src; }
+    catch (e) { el.classList.add("error"); el.textContent = "Diagram could not be rendered offline. Source:\n\n" + src; }
   });
 </script>
 </body>

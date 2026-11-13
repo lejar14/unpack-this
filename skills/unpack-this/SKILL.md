@@ -64,8 +64,8 @@ Write two files into `docs/handover/` at the analyzed repo's root (create the fo
 
 1. **`HANDOVER.md`**: the full report in Markdown, with Mermaid code blocks.
 2. **`handover.html`**: the same content rendered as a self-contained interactive page. Start from [assets/report-template.html](assets/report-template.html) and keep its styling and components unchanged so every report looks consistent:
-   - Fill the `{{PLACEHOLDERS}}`, one `<section>` per report section, with matching `id`s for the sidebar links.
-   - Use only the components documented in the template's comment block (badges, callouts, file chips, tables, collapsible details, Mermaid blocks).
+   - Fill every `{{PLACEHOLDER}}` (project name, one-sentence purpose, repo path, stack summary, date) and put content inside the five existing `<section>`s; do not rename their `id`s, the sidebar links to them.
+   - Use only the components documented in the template's comment block: facts list for the stack, flow steps for the end-to-end journey, notes for business rules, a filterable table for the feature inventory, one `<figure>` per workflow diagram, and finding rows (with a severity label in the report language) for gotchas. Do not add inline styles, new classes, emoji, or icons.
    - Put Mermaid source inside `<pre class="mermaid">` as-is; the template renders it with [Pele](https://pele.run) (Mermaid syntax, themed by the template's CSS). Stick to standard Mermaid syntax; a diagram that fails to parse shows an error in place, so check each diagram before writing it.
    - Escape `<`, `>`, `&` in code and text content.
 
