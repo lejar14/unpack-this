@@ -3,14 +3,15 @@
   unpack-this report template. Keep styles, scripts, and section ids unchanged; only fill content.
 
   Placeholders: {{LANG}} {{PROJECT_NAME}} {{PURPOSE}} {{REPO_PATH}} {{STACK_SUMMARY}} {{GENERATED_DATE}}
-    {{PURPOSE}}        one or two sentences: what the application is for
-    {{STACK_SUMMARY}}  short, e.g. "Laravel 10 · MySQL · Redis"
+    {{PURPOSE}}        one sentence: what the application is for
+    {{STACK_SUMMARY}}  three to five key technologies, e.g. "Laravel 10 · MySQL · Redis"
 
   Components (use only these):
     Section summary  <p class="lead">One or two sentences that answer the section's question.</p>
-    Paragraph        <p>...</p>   Sub-heading <h3>...</h3>
+    Paragraph        <p>...</p>   Sub-heading <h3>...</h3>   Lists <ul><li>...</li></ul>, <ol><li>...</li></ol>
     Facts            <dl class="facts"><div><dt>Framework</dt><dd>Laravel 10</dd></div>...</dl>
-    Badge            <span class="badge">text</span>  variants: .ok .warn .risk
+    Badge            <span class="badge">text</span>  variants: .ok (positive status only) .warn .risk
+                     Severity: High = badge risk, Medium = badge warn, Low = plain badge
     Inferred         <span class="badge warn">inferred</span>
     File ref         <code class="file">app/Services/OrderService.php:42</code>
     Callout          <div class="callout"><p><strong>Title.</strong> Text</p></div>  variants: .warn .risk
@@ -19,7 +20,7 @@
     Table            <table>...</table>; add class="filterable" for a filter box (feature inventory)
     Item list        <div class="items">
                        <div class="item">
-                         <div class="item-head"><span class="item-name">orders</span><span class="item-meta">table</span><span class="badge risk">High</span></div>
+                         <div class="item-head"><span class="item-name">orders</span><span class="item-meta">short type or context, optional</span><span class="badge risk">High</span></div>
                          <p>Description.</p>
                          <code class="file">path</code>
                        </div>
@@ -360,12 +361,12 @@
   };
   addEventListener("scroll", markActive, { passive: true }); markActive();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js" integrity="sha384-vDPV1LDXGIwjU5/gMUtHbn/WAmwRmOgkQpiq+Rm4d/BPTsdfpIUpvi2xVET6z85W" crossorigin="anonymous"></script>
 <script>
   document.querySelectorAll("pre.mermaid").forEach(el => {
     const src = el.textContent;
     try { pele.mount(el, src); }
-    catch (e) { el.classList.add("error"); el.textContent = "Diagram could not be rendered offline. Source:\n\n" + src; }
+    catch (e) { el.classList.add("error"); el.textContent = "Diagram renderer could not load (offline or blocked). Mermaid source:\n\n" + src; }
   });
 </script>
 </body>
