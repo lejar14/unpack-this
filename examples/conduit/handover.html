@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Conduit API · Handover Report</title>
+<style>
+  :root {
+    --bg: #ffffff; --side: #f6f9fc; --heading: #0a2540; --text: #425466; --muted: #5b6b7f; --line: #e3e8ee;
+    --accent: #4f46e5; --accent-strong: #3b32c9; --accent-tint: #efeefe;
+    --ok: #0e6245; --ok-tint: #d7f7e3; --warn: #8a3a05; --warn-tint: #fdf0c8; --risk: #a41c4e; --risk-tint: #ffe7f0;
+    --code-bg: #0a2540; --code-text: #e3e8ee; --code-muted: #8da4bf;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --header: 60px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1424; --side: #101a2d; --heading: #f6f9fc; --text: #c1c9d2; --muted: #95a2b3; --line: #233150;
+      --accent: #a29dff; --accent-strong: #bdb9ff; --accent-tint: #1d2150;
+      --ok: #7ee2a8; --ok-tint: #10301f; --warn: #f5c46b; --warn-tint: #33260b; --risk: #ff8fb5; --risk-tint: #3a1324;
+      --code-bg: #060c18; --code-text: #e3e8ee; --code-muted: #7d8da3;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header) + 16px); scrollbar-color: var(--line) transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; caret-color: var(--accent); }
+  ::selection { background: var(--accent-tint); color: var(--heading); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* Header */
+  .topbar { position: sticky; top: 0; z-index: 3; height: var(--header); display: flex; align-items: center; gap: 14px; padding: 0 24px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
+  .topbar .project { font-weight: 650; color: var(--heading); letter-spacing: -0.01em; }
+  .topbar .sep { width: 1px; height: 20px; background: var(--line); }
+  .topbar .doc { color: var(--muted); font-size: 14px; }
+  .topbar .date { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  /* Shell */
+  .shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); }
+  .sidebar { position: sticky; top: var(--header); height: calc(100vh - var(--header)); overflow-y: auto; padding: 28px 16px 40px 24px; background: var(--side); border-right: 1px solid var(--line); }
+  .sidebar h2 { margin: 22px 0 6px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--heading); }
+  .sidebar h2:first-child { margin-top: 0; }
+  .sidebar ul { list-style: none; margin: 0; padding: 0; }
+  .sidebar a { display: block; padding: 5px 10px; margin-left: -10px; border-radius: 6px; color: var(--text); font-size: 14px; font-weight: 450; line-height: 1.4; transition: color .15s, background-color .15s; }
+  .sidebar a:hover { color: var(--heading); background: color-mix(in srgb, var(--line) 55%, transparent); text-decoration: none; }
+  .sidebar a[aria-current] { color: var(--accent); background: var(--accent-tint); font-weight: 600; }
+
+  main { padding: 48px clamp(20px, 5vw, 72px) 120px; min-width: 0; }
+  article { max-width: 880px; }
+
+  /* Page header */
+  .page-head { padding-bottom: 32px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; color: var(--heading); font-size: 36px; line-height: 1.15; letter-spacing: -0.025em; font-weight: 700; text-wrap: balance; }
+  .page-head .purpose { margin: 14px 0 22px; font-size: 19px; line-height: 1.55; max-width: 62ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; font-size: 14px; }
+  .meta div { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; color: var(--heading); font-weight: 550; overflow-wrap: anywhere; }
+
+  /* Sections */
+  section { padding-top: 48px; }
+  section + section { margin-top: 24px; border-top: 1px solid var(--line); }
+  h2 { position: relative; margin: 0 0 10px; color: var(--heading); font-size: 26px; line-height: 1.25; letter-spacing: -0.02em; font-weight: 700; }
+  h3 { position: relative; margin: 36px 0 10px; color: var(--heading); font-size: 19px; line-height: 1.35; letter-spacing: -0.01em; font-weight: 650; }
+  h4 { margin: 0 0 4px; color: var(--heading); font-size: 16px; font-weight: 650; }
+  .anchor { position: absolute; left: -26px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; display: grid; place-items: center; color: var(--muted); opacity: 0; transition: opacity .15s; }
+  .anchor svg { width: 15px; height: 15px; }
+  h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
+  p { margin: 0 0 16px; max-width: 70ch; }
+  p.lead { font-size: 18px; line-height: 1.6; color: var(--text); margin-bottom: 24px; }
+  ul, ol { padding-left: 22px; margin: 0 0 16px; max-width: 70ch; }
+  li { margin: 4px 0; }
+  li::marker { color: var(--muted); }
+  strong { color: var(--heading); font-weight: 600; }
+  code { font-family: var(--mono); font-size: .875em; }
+  :not(pre) > code:not(.file) { color: var(--heading); background: var(--side); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; }
+  code.file { color: var(--accent); background: var(--accent-tint); padding: 2px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+
+  /* Facts */
+  dl.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 32px; margin: 0 0 20px; }
+  dl.facts div { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  dl.facts dt { font-size: 13px; color: var(--muted); }
+  dl.facts dd { margin: 2px 0 0; color: var(--heading); font-weight: 550; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 0 7px; border-radius: 5px; font-size: 12px; line-height: 20px; font-weight: 600; background: var(--accent-tint); color: var(--accent); vertical-align: 1px; white-space: nowrap; }
+  .badge.ok { background: var(--ok-tint); color: var(--ok); }
+  .badge.warn { background: var(--warn-tint); color: var(--warn); }
+  .badge.risk { background: var(--risk-tint); color: var(--risk); }
+
+  /* Callouts */
+  .callout { position: relative; margin: 20px 0 24px; padding: 14px 18px 14px 46px; border-radius: 8px; background: var(--accent-tint); color: var(--heading); max-width: 76ch; }
+  .callout::before { content: ""; position: absolute; left: 16px; top: 17px; width: 18px; height: 18px; background: var(--accent);
+    -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat;
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm0 4a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Zm1.2 9.5H8.8v-1.5h.6V10h-.6V8.5h2.1v5h.3V15Z'/%3E%3C/svg%3E"); }
+  .callout.warn { background: var(--warn-tint); }
+  .callout.warn::before { background: var(--warn); --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.6 2.4a1.6 1.6 0 0 1 2.8 0l7.2 12.9a1.6 1.6 0 0 1-1.4 2.4H2.8a1.6 1.6 0 0 1-1.4-2.4L8.6 2.4ZM9 7v4.5h2V7H9Zm1 6.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z'/%3E%3C/svg%3E"); }
+  .callout.risk { background: var(--risk-tint); }
+  .callout.risk::before { background: var(--risk); --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1 4h2v6H9v-6Zm1 7.7a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z'/%3E%3C/svg%3E"); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 8px; }
+
+  /* Flow */
+  ol.flow { list-style: none; padding: 0; margin: 8px 0 28px; display: flex; flex-wrap: wrap; align-items: center; row-gap: 12px; counter-reset: flow; max-width: none; }
+  ol.flow li { counter-increment: flow; display: flex; align-items: center; margin: 0; color: var(--heading); font-weight: 600; font-size: 15px; }
+  ol.flow li::before { content: counter(flow); display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; background: var(--accent-tint); color: var(--accent); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  ol.flow li:not(:last-child)::after { content: ""; width: 28px; height: 1px; margin: 0 12px; background: var(--muted); opacity: .6; }
+
+  /* Steps */
+  ol.steps { list-style: none; padding: 0; margin: 8px 0 24px; counter-reset: step; max-width: none; }
+  ol.steps > li { position: relative; counter-increment: step; margin: 0; padding: 0 0 26px 44px; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--heading); font-size: 13px; font-weight: 700; }
+  ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 34px; bottom: 6px; width: 1px; background: var(--line); }
+  ol.steps h4 { line-height: 28px; margin-bottom: 2px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 4px 0 24px; }
+  table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--heading); font-size: 13px; font-weight: 600; white-space: nowrap; border-bottom-color: color-mix(in srgb, var(--heading) 25%, transparent); }
+  td:first-child { color: var(--heading); font-weight: 600; }
+  td code.file { overflow-wrap: normal; white-space: nowrap; }
+  .filter { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
+  .filter label { position: relative; flex: 0 1 300px; }
+  .filter svg { position: absolute; left: 11px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .filter input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--heading); font: inherit; font-size: 14px; box-shadow: 0 1px 2px rgba(10, 37, 64, .06); transition: border-color .15s, box-shadow .15s; }
+  .filter input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+  .filter output { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.empty td { color: var(--muted); font-weight: 400; text-align: center; padding: 20px; }
+
+  /* Item list */
+  .items { margin: 4px 0 24px; border-top: 1px solid var(--line); }
+  .item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-bottom: 4px; }
+  .item-name { color: var(--heading); font-weight: 650; }
+  .item-name code { background: none !important; border: 0 !important; padding: 0 !important; font-size: .94em; }
+  .item-meta { color: var(--muted); font-size: 13px; }
+  .item p { margin-bottom: 6px; }
+  .item p:last-child { margin-bottom: 0; }
+
+  /* Code blocks */
+  .codewrap { position: relative; margin: 8px 0 16px; }
+  pre.code { margin: 0; padding: 14px 52px 14px 18px; border-radius: 8px; background: var(--code-bg); color: var(--code-text); font: 13.5px/1.6 var(--mono); overflow-x: auto; white-space: pre; }
+  .copy { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--code-muted); cursor: pointer; transition: color .15s, background-color .15s; }
+  .copy:hover { color: var(--code-text); background: rgba(255, 255, 255, .08); }
+  .copy svg { width: 16px; height: 16px; }
+  .copy .done { display: none; }
+  .copy.copied .idle { display: none; }
+  .copy.copied .done { display: block; color: #7ee2a8; }
+
+  /* Collapsible */
+  details { margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; }
+  details summary { cursor: pointer; padding: 12px 16px; color: var(--heading); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 10px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; flex: none; }
+  details[open] summary::before { transform: rotate(45deg); }
+  details > div { padding: 0 16px 14px 33px; }
+
+  /* Diagrams */
+  figure { margin: 16px 0 32px; }
+  figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); }
+  pre.mermaid {
+    margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--side); overflow-x: auto; text-align: center;
+    --pele-bg: var(--side); --pele-fg: var(--heading); --pele-muted: var(--muted); --pele-line: var(--muted);
+    --pele-surface: var(--bg); --pele-surface-alt: var(--accent-tint); --pele-border: var(--line);
+    --pele-accent: var(--accent); --pele-error: var(--risk); --pele-font: var(--sans); --pele-font-mono: var(--mono);
+  }
+  pre.mermaid.error { text-align: left; white-space: pre-wrap; font: 13px/1.6 var(--mono); color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: sticky; top: var(--header); z-index: 2; height: auto; padding: 8px 16px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-right: 0; border-bottom: 1px solid var(--line); }
+    .sidebar h2 { display: none; }
+    .sidebar ul { display: contents; }
+    .sidebar a { margin: 0; white-space: nowrap; }
+    html { scroll-padding-top: calc(var(--header) + 64px); }
+    .topbar .date { display: none; }
+    main { padding-top: 32px; }
+    h1 { font-size: 30px; }
+    .anchor { display: none; }
+  }
+  @media print {
+    .topbar, .sidebar, .filter, .copy, .anchor { display: none; }
+    .shell { display: block; }
+    section, figure, .item, ol.steps > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="project">Conduit API</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="doc">Handover report</span>
+  <span class="date">2026-11-13</span>
+</header>
+<div class="shell">
+  <nav class="sidebar" aria-label="Report sections">
+    <h2>Product</h2>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#context">System Context</a></li>
+      <li><a href="#business">Business Processes</a></li>
+      <li><a href="#features">Feature Inventory</a></li>
+    </ul>
+    <h2>Engineering</h2>
+    <ul>
+      <li><a href="#architecture">Architecture &amp; Flows</a></li>
+      <li><a href="#data-model">Data Model</a></li>
+    </ul>
+    <h2>Taking over</h2>
+    <ul>
+      <li><a href="#risks">Risks &amp; Tech Debt</a></li>
+      <li><a href="#getting-started">Getting Started</a></li>
+      <li><a href="#questions">Open Questions &amp; Glossary</a></li>
+    </ul>
+  </nav>
+  <main>
+    <article>
+      <div class="page-head">
+        <h1>Conduit API</h1>
+        <p class="purpose">REST API backend untuk platform blog sosial "Conduit" (spesifikasi RealWorld): pengguna mendaftar, menulis artikel, memberi komentar, memfavoritkan, dan saling follow.</p>
+        <dl class="meta">
+          <div><dt>Repository</dt><dd><code>https://github.com/gothinkster/node-express-realworld-example-app</code></dd></div>
+          <div><dt>Stack</dt><dd>Node.js · Express 4 · Prisma 4 · PostgreSQL · Nx</dd></div>
+          <div><dt>Generated</dt><dd>2026-11-13</dd></div>
+        </dl>
+      </div>
+
+      <section id="overview"><h2>Overview</h2>
+<p class="lead">Ini adalah backend REST API untuk aplikasi blog sosial bergaya Medium (spesifikasi RealWorld "Conduit"), ditulis dengan Express dan Prisma di atas PostgreSQL. Tidak ada frontend, worker, atau cache di repo ini.</p>
+<h3>Purpose</h3>
+<p>Aplikasi ini menyediakan API untuk registrasi dan login pengguna, penulisan artikel dengan tag, komentar, favorit, serta follow antar pengguna. Repo ini adalah implementasi contoh (reference implementation) dari spesifikasi RealWorld, bukan produk bisnis dengan domain khusus (<code class="file">README.md</code>).</p>
+<h3>At a glance</h3>
+<dl class="facts">
+  <div><dt>Language</dt><dd>TypeScript 5.2 (<code class="file">package.json</code>, <code class="file">tsconfig.json</code>)</dd></div>
+  <div><dt>Framework</dt><dd>Express 4.18, <code>express-jwt</code> untuk auth (<code class="file">package.json</code>)</dd></div>
+  <div><dt>Database</dt><dd>PostgreSQL lewat Prisma 4.16 (<code class="file">src/prisma/schema.prisma:1-4</code>)</dd></div>
+  <div><dt>Cache / queue</dt><dd>Tidak ada (tidak ada import atau config terkait)</dd></div>
+  <div><dt>Frontend</dt><dd>Tidak ada; hanya API plus static file di <code class="file">src/assets/</code> (<code class="file">src/main.ts:19</code>)</dd></div>
+  <div><dt>Build / monorepo tool</dt><dd>Nx 17 dengan esbuild, target <code>api</code> di <code class="file">project.json</code></dd></div>
+  <div><dt>Hosting / infra</dt><dd>Dockerfile hasil generate Nx (<code class="file">Dockerfile</code>); tidak ada CI atau IaC di repo</dd></div>
+</dl>
+      </section>
+      <section id="context"><h2>System Context</h2>
+<p class="lead">API ini dipakai oleh klien frontend RealWorld (tidak ada di repo) dan hanya bergantung pada satu database PostgreSQL; tidak ada integrasi pihak ketiga di kode.</p>
+<h3>Actors / roles</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name">Anonymous visitor</span><span class="item-meta">tanpa token</span></div>
+<p>Boleh membaca daftar artikel, detail artikel, komentar, profil, dan tag, serta mendaftar atau login. Endpoint ini memakai <code>auth.optional</code>.</p>
+<code class="file">src/app/routes/auth/auth.ts:19-24</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Authenticated user</span><span class="item-meta">JWT</span></div>
+<p>Menulis, mengubah, dan menghapus artikel miliknya; berkomentar; favorit dan unfavorit; follow dan unfollow; mengubah profil sendiri. Endpoint ini memakai <code>auth.required</code>.</p>
+<code class="file">src/app/routes/article/article.controller.ts</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Demo user</span><span class="item-meta">flag <code>demo</code> di tabel User</span></div>
+<p>Bukan peran di API, tetapi user hasil seed yang kontennya terlihat oleh semua orang. Konten user non-demo hanya terlihat oleh pemiliknya di listing (lihat Business Processes).</p>
+<code class="file">src/prisma/seed.ts:21-28</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Operator / developer</span><span class="item-meta">CLI</span></div>
+<p>Menjalankan migrasi Prisma dan seed data lewat command line, bukan lewat HTTP.</p>
+<code class="file">package.json</code>
+</div>
+</div>
+<h3>External systems</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name">PostgreSQL</span><span class="item-meta">database</span></div>
+<p>Satu-satunya sistem eksternal; koneksi lewat variabel <code>DATABASE_URL</code>.</p>
+<code class="file">src/prisma/schema.prisma:1-4</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Gambar avatar default</span><span class="item-meta">URL statis</span></div>
+<p>Nilai default kolom <code>image</code> menunjuk ke host <code>api.realworld.io</code>; hanya string URL, API tidak memanggilnya.</p>
+<code class="file">src/prisma/schema.prisma:48</code>
+</div>
+</div>
+<p>Tidak ditemukan payment gateway, email/SMS, object storage, auth provider eksternal, atau message broker (hasil pencarian import di <code class="file">src/</code> dan <code class="file">package.json</code>).</p>
+<h3>Context diagram</h3>
+<figure><pre class="mermaid">flowchart LR
+  anon["Anonymous visitor"]
+  user["Authenticated user"]
+  ops["Operator"]
+  api["Conduit API&lt;br/&gt;Express + Prisma"]
+  pg[("PostgreSQL")]
+  anon --&gt;|"REST /api"| api
+  user --&gt;|"REST /api + JWT"| api
+  ops --&gt;|"prisma migrate, seed"| api
+  api --&gt;|"Prisma Client"| pg</pre><figcaption>Konteks sistem (C4 level 1)</figcaption></figure>
+      </section>
+      <section id="business"><h2>Business Processes</h2>
+<p class="lead">Alur utamanya adalah pengguna mendaftar, menerbitkan artikel, lalu berinteraksi lewat komentar, favorit, dan follow; semua dijalankan sinkron per request HTTP tanpa job latar belakang.</p>
+<h3>End-to-end flow</h3>
+<ol class="flow"><li>Register / Login</li><li>Publish article</li><li>Browse (list, feed, tag)</li><li>Comment</li><li>Favorite</li><li>Follow author</li></ol>
+<p><strong>Registrasi dan login.</strong> <code class="file">POST /api/users</code> memvalidasi email, username, password (tidak boleh kosong setelah di-trim), memeriksa keunikan, melakukan hash bcrypt, menyimpan user, dan langsung mengembalikan JWT. <code class="file">POST /api/users/login</code> membandingkan hash dan mengembalikan token baru (<code class="file">src/app/routes/auth/auth.service.ts:38-129</code>).</p>
+<p><strong>Menulis artikel.</strong> <code class="file">POST /api/articles</code> membuat slug dari judul ditambah id penulis, membuat tag baru bila belum ada (<code>connectOrCreate</code>), dan mengembalikan artikel yang sudah dipetakan. Hanya penulis yang boleh mengubah atau menghapus (<code class="file">src/app/routes/article/article.service.ts:162-239</code>, <code>:289-414</code>).</p>
+<p><strong>Membaca konten.</strong> <code class="file">GET /api/articles</code> mendukung filter <code>tag</code>, <code>author</code>, <code>favorited</code>, paginasi <code>limit</code> dan <code>offset</code>. <code class="file">GET /api/articles/feed</code> hanya menampilkan artikel dari user yang di-follow. Listing dibatasi oleh aturan visibilitas <code>demo</code> di bawah (<code class="file">article.service.ts:8-111</code>, <code>:113-160</code>).</p>
+<p><strong>Interaksi sosial.</strong> Komentar, favorit, dan follow semuanya relasi many-to-many atau one-to-many di Prisma; favorit dan follow dilakukan dengan <code>connect</code> dan <code>disconnect</code> sehingga idempotent (<code class="file">article.service.ts:562-651</code>, <code class="file">src/app/routes/profile/profile.service.ts:22-60</code>).</p>
+<div class="callout warn"><p><strong>Aturan visibilitas tidak standar.</strong> Listing artikel, komentar, dan tag hanya menampilkan konten dari author dengan <code>demo = true</code> atau milik user yang sedang login. Artinya user non-demo tidak melihat artikel user non-demo lain di listing, tetapi <code class="file">GET /articles/:slug</code> tidak memakai filter ini (<code class="file">article.service.ts:13-25</code>, <code>:241-274</code>). Tujuan bisnisnya tidak terdokumentasi <span class="badge warn">inferred</span> ( mencegah konten publik di instance demo).</p></div>
+<h3>Business rules</h3>
+<table>
+<thead><tr><th>Rule</th><th>Condition / value</th><th>Enforced in</th></tr></thead>
+<tbody>
+<tr><td>Field wajib registrasi</td><td>email, username, password tidak boleh kosong setelah <code>trim()</code>; gagal dengan 422</td><td><code class="file">src/app/routes/auth/auth.service.ts:39-54</code></td></tr>
+<tr><td>Keunikan user</td><td>email dan username unik; 422 <code>has already been taken</code>; juga unique index DB</td><td><code class="file">src/app/routes/auth/auth.service.ts:9-36</code>, <code class="file">src/prisma/schema.prisma:45-46</code></td></tr>
+<tr><td>Hash password</td><td>bcrypt cost 10 saat register dan saat ganti password</td><td><code class="file">src/app/routes/auth/auth.service.ts:58</code>, <code>:156</code></td></tr>
+<tr><td>Token</td><td>JWT HS256, payload <code>user.id</code>, kedaluwarsa 60 hari</td><td><code class="file">src/app/routes/auth/token.utils.ts:3-6</code>, <code class="file">src/app/routes/auth/auth.ts:19</code></td></tr>
+<tr><td>Header auth</td><td>Skema <code>Token</code> atau <code>Bearer</code>; <code>optional</code> tidak menolak request tanpa token</td><td><code class="file">src/app/routes/auth/auth.ts:4-24</code></td></tr>
+<tr><td>Login gagal</td><td>Pesan generik <code>email or password is invalid</code> dengan status 403</td><td><code class="file">src/app/routes/auth/auth.service.ts:124-128</code></td></tr>
+<tr><td>Field wajib artikel</td><td>title, description, body wajib; 422 bila kosong</td><td><code class="file">src/app/routes/article/article.service.ts:166-176</code></td></tr>
+<tr><td>Slug artikel</td><td><code>slugify(title)-&lt;authorId&gt;</code>; bila sudah ada, 422 <code>must be unique</code></td><td><code class="file">src/app/routes/article/article.service.ts:178-191</code></td></tr>
+<tr><td>Slug berubah saat judul berubah</td><td>Judul baru menghitung ulang slug dan URL lama tidak berlaku</td><td><code class="file">src/app/routes/article/article.service.ts:316-333</code>, <code>:353</code></td></tr>
+<tr><td>Update tag</td><td>Semua tag diputus lalu dibuat ulang dari <code>tagList</code>; tanpa <code>tagList</code> artinya semua tag terhapus</td><td><code class="file">src/app/routes/article/article.service.ts:335-358</code></td></tr>
+<tr><td>Otorisasi artikel</td><td>Hanya penulis boleh update atau delete; 403 bila bukan; 404 bila tidak ada</td><td><code class="file">src/app/routes/article/article.service.ts:306-314</code>, <code>:400-408</code></td></tr>
+<tr><td>Komentar</td><td>body wajib; hanya penulis komentar boleh menghapus</td><td><code class="file">src/app/routes/article/article.service.ts:474-476</code>, <code>:527-553</code></td></tr>
+<tr><td>Visibilitas listing</td><td>Hanya author <code>demo = true</code> atau user yang login</td><td><code class="file">src/app/routes/article/article.service.ts:13-25</code>, <code>:417-431</code></td></tr>
+<tr><td>Paginasi</td><td>Default <code>limit</code> 10 dan <code>offset</code> 0; urut <code>createdAt</code> desc</td><td><code class="file">src/app/routes/article/article.service.ts:79-83</code></td></tr>
+<tr><td>Feed</td><td>Hanya artikel dari user yang di-follow oleh user login</td><td><code class="file">src/app/routes/article/article.service.ts:113-131</code></td></tr>
+<tr><td>Tag populer</td><td>10 tag teratas berdasarkan jumlah artikel, dengan visibilitas yang sama</td><td><code class="file">src/app/routes/tag/tag.service.ts:4-35</code></td></tr>
+<tr><td>Cascade delete</td><td>Hapus user menghapus artikel dan komentarnya; hapus artikel menghapus komentarnya</td><td><code class="file">src/prisma/schema.prisma:20</code>, <code>:31</code>, <code>:33</code></td></tr>
+<tr><td>Avatar default</td><td>Bila <code>image</code> kosong, dipakai URL smiley-cyrus</td><td><code class="file">src/prisma/schema.prisma:48</code></td></tr>
+</tbody>
+</table>
+      </section>
+      <section id="features"><h2>Feature Inventory</h2>
+<p class="lead">Ada lima modul HTTP di bawah prefix <code class="file">/api</code> (auth, profile, article, comment di dalam article, tag) ditambah health check dan static file; seluruhnya terdaftar di satu router.</p>
+<table class="filterable">
+<thead><tr><th>Module</th><th>Key Features</th><th>Code Location</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Auth / User</td><td><code class="file">POST /users</code> register, <code class="file">POST /users/login</code>, <code class="file">GET /user</code>, <code class="file">PUT /user</code></td><td><code class="file">src/app/routes/auth/</code></td><td>JWT 60 hari; update user tanpa validasi keunikan</td></tr>
+<tr><td>Profile</td><td><code class="file">GET /profiles/:username</code>, <code>POST</code> dan <code class="file">DELETE /profiles/:username/follow</code></td><td><code class="file">src/app/routes/profile/</code></td><td>Follow lewat relasi self-many-to-many <code>UserFollows</code></td></tr>
+<tr><td>Articles</td><td>List, feed, create, get, update, delete (<code class="file">/articles</code>, <code class="file">/articles/feed</code>, <code class="file">/articles/:slug</code>)</td><td><code class="file">src/app/routes/article/</code></td><td>Slug = judul + id penulis; listing terfilter <code>demo</code></td></tr>
+<tr><td>Comments</td><td>List, add, delete di <code class="file">/articles/:slug/comments</code></td><td><code class="file">src/app/routes/article/article.service.ts:416-560</code></td><td>Delete mengabaikan slug</td></tr>
+<tr><td>Favorites</td><td><code>POST</code> dan <code class="file">DELETE /articles/:slug/favorite</code></td><td><code class="file">src/app/routes/article/article.service.ts:562-651</code></td><td>Relasi <code>UserFavorites</code></td></tr>
+<tr><td>Tags</td><td><code class="file">GET /tags</code> (10 populer)</td><td><code class="file">src/app/routes/tag/</code></td><td>Tag dibuat otomatis saat artikel dibuat</td></tr>
+<tr><td>Health / static</td><td><code class="file">GET /</code> mengembalikan status; file di <code class="file">src/assets/</code> disajikan statis</td><td><code class="file">src/main.ts:19-24</code></td><td>e2e test mengharapkan respons berbeda</td></tr>
+<tr><td>Seed</td><td>Membuat 12 user demo, 12 artikel per user, dan komentar dari semua user</td><td><code class="file">src/prisma/seed.ts</code></td><td>Dijalankan lewat <code>npx prisma db seed</code></td></tr>
+<tr><td>Error handling</td><td>Memetakan <code>HttpException</code> ke status HTTP; <code>UnauthorizedError</code> ke 401</td><td><code class="file">src/main.ts:26-48</code>, <code class="file">src/app/models/http-exception.model.ts</code></td><td>Error lain jadi 500 dengan pesan mentah</td></tr>
+</tbody>
+</table>
+      </section>
+      <section id="architecture"><h2>Architecture &amp; Runtime Flows</h2>
+<p class="lead">Satu proses Node/Express stateless yang berlapis routes/controller ke service ke Prisma ke PostgreSQL; tidak ada worker atau scheduler terpisah.</p>
+<h3>Building blocks</h3>
+<p>Layering: <code class="file">routes.ts</code> memasang semua controller di bawah <code class="file">/api</code>; controller (<code class="file">*.controller.ts</code>) menangani HTTP dan memilih <code>auth.required</code> atau <code>auth.optional</code>; service (<code class="file">*.service.ts</code>) memegang business rule dan memanggil Prisma; mapper (<code class="file">*.mapper.ts</code>, <code class="file">profile.utils.ts</code>) membentuk respons sesuai spesifikasi (<code class="file">src/app/routes/routes.ts:7-13</code>). Prisma client dibuat di <code class="file">src/prisma/prisma-client.ts</code>.</p>
+<figure><pre class="mermaid">flowchart LR
+  client["Client"]
+  subgraph app["Node process"]
+    mw["Express middleware&lt;br/&gt;cors, body-parser"]
+    ctl["Controllers"]
+    auth["express-jwt"]
+    svc["Services + mappers"]
+    err["Error handler"]
+  end
+  pg[("PostgreSQL")]
+  client --&gt; mw --&gt; ctl
+  ctl --&gt; auth
+  ctl --&gt; svc
+  svc --&gt;|"Prisma"| pg
+  ctl -.-&gt; err</pre><figcaption>Container diagram (C4 level 2)</figcaption></figure>
+<h3>Critical flows</h3>
+<figure><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant R as auth.controller
+  participant S as auth.service
+  participant DB as PostgreSQL
+  C-&gt;&gt;R: POST /api/users
+  R-&gt;&gt;S: createUser
+  S-&gt;&gt;DB: find email and username
+  S-&gt;&gt;S: bcrypt hash, generateToken
+  S-&gt;&gt;DB: user.create
+  S--&gt;&gt;C: 201 user + JWT</pre><figcaption>Register dan login</figcaption></figure>
+<figure><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant J as express-jwt
+  participant R as article.controller
+  participant S as article.service
+  participant DB as PostgreSQL
+  C-&gt;&gt;J: POST /api/articles + Token
+  J-&gt;&gt;R: req.auth.user.id
+  R-&gt;&gt;S: createArticle
+  S-&gt;&gt;DB: check slug unique
+  S-&gt;&gt;DB: article.create + tags
+  S--&gt;&gt;C: 201 article</pre><figcaption>Membuat artikel (auth required)</figcaption></figure>
+<figure><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant R as article.controller
+  participant S as article.service
+  participant DB as PostgreSQL
+  C-&gt;&gt;R: GET /api/articles?tag=x
+  R-&gt;&gt;S: getArticles
+  S-&gt;&gt;S: build filter demo OR own id
+  S-&gt;&gt;DB: count + findMany
+  S--&gt;&gt;C: articles + articlesCount</pre><figcaption>Listing artikel dengan filter visibilitas</figcaption></figure>
+      </section>
+      <section id="data-model"><h2>Data Model</h2>
+<p class="lead">Empat model Prisma (User, Article, Comment, Tag) dengan dua relasi many-to-many implisit (favorit dan follow); tidak ada kolom status sehingga tidak ada state machine.</p>
+<h3>Core entities</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name"><code>User</code></span><span class="item-meta">tabel utama</span></div>
+<p>Kolom <code>email</code> dan <code>username</code> unik, <code>password</code> (hash bcrypt), <code>image</code>, <code>bio</code>, dan <code>demo</code> (default false). Relasi: <code>articles</code>, <code>favorites</code>, <code>followedBy</code> dan <code>following</code> (self-relation <code>UserFollows</code>), <code>comments</code>.</p>
+<code class="file">src/prisma/schema.prisma:43-56</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name"><code>Article</code></span><span class="item-meta">konten</span></div>
+<p>Kolom <code>slug</code> unik, <code>title</code>, <code>description</code>, <code>body</code>, timestamp. Relasi ke <code>author</code> (cascade), <code>tagList</code>, <code>favoritedBy</code>, <code>comments</code>.</p>
+<code class="file">src/prisma/schema.prisma:11-24</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name"><code>Comment</code></span><span class="item-meta">konten</span></div>
+<p>Kolom <code>body</code> dan timestamp, milik satu <code>Article</code> dan satu <code>User</code>, keduanya <code>onDelete: Cascade</code>.</p>
+<code class="file">src/prisma/schema.prisma:26-35</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name"><code>Tag</code></span><span class="item-meta">label</span></div>
+<p>Kolom <code>name</code> unik; many-to-many implisit dengan <code>Article</code> (tabel join dibuat migrasi <code>implicit_tags</code>).</p>
+<code class="file">src/prisma/schema.prisma:37-41</code>
+</div>
+</div>
+<p>Skema dikelola lewat 4 migrasi SQL di <code class="file">src/prisma/migrations/</code> (initial, implicit_tags, api_url, deprecated_preview).</p>
+<figure><pre class="mermaid">erDiagram
+  USER ||--o{ ARTICLE : writes
+  USER ||--o{ COMMENT : writes
+  ARTICLE ||--o{ COMMENT : has
+  ARTICLE }o--o{ TAG : tagged
+  USER }o--o{ ARTICLE : favorites
+  USER }o--o{ USER : follows
+  USER {
+    int id PK
+    string email UK
+    string username UK
+    boolean demo
+  }
+  ARTICLE {
+    int id PK
+    string slug UK
+    int authorId FK
+  }
+  COMMENT {
+    int id PK
+    int articleId FK
+    int authorId FK
+  }
+  TAG {
+    int id PK
+    string name UK
+  }</pre><figcaption>ER diagram</figcaption></figure>
+<h3>Status lifecycle</h3>
+<p>N/A: tidak ada kolom status di model mana pun (<code class="file">src/prisma/schema.prisma</code>), jadi tidak ada state diagram.</p>
+      </section>
+      <section id="risks"><h2>Risks &amp; Technical Debt</h2>
+<p class="lead">Risiko terbesar adalah secret JWT dengan fallback hardcoded, tidak adanya CI dan test yang valid, serta beberapa jalur yang berakhir 500 karena validasi hilang; tidak ada cron, queue, atau webhook tersembunyi.</p>
+<h3>Hidden logic</h3>
+<p>Tidak ditemukan cron, scheduler, queue worker, event listener, webhook, atau DB trigger (pencarian di <code class="file">src/</code> dan migrasi SQL). Satu-satunya logika "tersembunyi" adalah <code>ON DELETE CASCADE</code> di database dan skrip seed manual di <code class="file">src/prisma/seed.ts</code>.</p>
+<h3>Findings</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name">Secret JWT punya fallback hardcoded</span><span class="badge risk">High</span></div>
+<p>Bila <code>JWT_SECRET</code> tidak di-set, token ditandatangani dengan string default yang ada di source, sehingga siapa pun bisa memalsukan token user mana pun. Wajibkan variabel itu dan gagal saat startup bila kosong.</p>
+<code class="file">src/app/routes/auth/auth.ts:16</code> <code class="file">src/app/routes/auth/auth.ts:21</code> <code class="file">src/app/routes/auth/token.utils.ts:4</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Tidak ada CI, <code>.env.example</code>, dan test e2e basi</span><span class="badge risk">High</span></div>
+<p>Tidak ada workflow CI, jadi test tidak pernah dijalankan otomatis. Test e2e mengharapkan <code>{ message: 'Hello API' }</code> padahal <code class="file">GET /</code> mengembalikan <code>{ status: ... }</code>, dan <code class="file">tag.service.test.ts</code> berisi 6 baris tanpa test. Tambahkan CI minimal dan perbaiki e2e.</p>
+<code class="file">e2e/src/server/server.spec.ts:7</code> <code class="file">src/main.ts:21</code> <code class="file">src/tests/services/tag.service.test.ts</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Jalur yang berakhir 500 karena validasi hilang</span><span class="badge warn">Medium</span></div>
+<p>Komentar pada slug yang tidak ada memanggil <code>connect</code> dengan <code>id</code> undefined; follow, favorite, dan unfavorite pada target yang tidak ada melempar error Prisma; <code>updateUser</code> tidak memeriksa keunikan email atau username. Semuanya jatuh ke error handler dan jadi 500. Tambahkan cek 404 dan 422 eksplisit.</p>
+<code class="file">src/app/routes/article/article.service.ts:478</code> <code class="file">src/app/routes/profile/profile.service.ts:23</code> <code class="file">src/app/routes/auth/auth.service.ts:151</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Error handler membocorkan pesan internal</span><span class="badge warn">Medium</span></div>
+<p>Error non-<code>HttpException</code> dikembalikan sebagai 500 dengan <code>err.message</code> mentah (pesan Prisma bisa memuat detail query). Kembalikan pesan generik dan log detailnya.</p>
+<code class="file">src/main.ts:43</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Update artikel tidak atomik</span><span class="badge warn">Medium</span></div>
+<p>Tag diputus di query terpisah sebelum update; bila update gagal, artikel kehilangan semua tag. Bungkus dalam <code>prisma.$transaction</code>.</p>
+<code class="file">src/app/routes/article/article.service.ts:343</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Aturan visibilitas <code>demo</code> tidak konsisten</span><span class="badge warn">Medium</span></div>
+<p>Listing, komentar, dan tag disaring berdasarkan <code>demo</code> atau pemilik, tetapi detail artikel tidak. Perilaku ini juga menyimpang dari spesifikasi RealWorld; konfirmasi ke tim lama apakah disengaja.</p>
+<code class="file">src/app/routes/article/article.service.ts:13</code> <code class="file">src/app/routes/article/article.service.ts:241</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Validasi input lemah dan tanpa pembatasan</span><span class="badge warn">Medium</span></div>
+<p>Tidak ada validasi format email, panjang password, atau batas panjang input; <code>cors()</code> terbuka untuk semua origin; tidak ada rate limiting pada login. Tambahkan schema validation dan batasan.</p>
+<code class="file">src/app/routes/auth/auth.service.ts:38</code> <code class="file">src/main.ts:13</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Dockerfile bergantung pada build di luar image</span><span class="badge warn">Medium</span></div>
+<p>Image hanya menyalin <code class="file">dist/api</code> yang harus sudah dibangun sebelumnya, dan tidak menjalankan <code>prisma generate</code> atau migrasi. Apakah Prisma client ikut ter-bundle belum bisa dipastikan dari kode <span class="badge warn">inferred</span> ( perlu <code>prisma generate</code> di langkah build).</p>
+<code class="file">Dockerfile:22</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name"><code>deleteComment</code> mengabaikan slug dan cabang 403 tidak terjangkau</span><span class="badge">Low</span></div>
+<p>Query sudah memfilter penulis sehingga komentar orang lain menghasilkan 404, bukan 403; slug di URL tidak diperiksa. Rapikan agar perilaku sesuai niat.</p>
+<code class="file">src/app/routes/article/article.service.ts:527</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Token 60 hari tanpa revocation</span><span class="badge">Low</span></div>
+<p>Tidak ada refresh token atau daftar cabut; token bocor valid sampai kedaluwarsa. Pertimbangkan masa berlaku lebih pendek.</p>
+<code class="file">src/app/routes/auth/token.utils.ts:5</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Dokumentasi usang</span><span class="badge">Low</span></div>
+<p>JSDoc route menyebut <code class="file">/article/:slug</code> dan <code class="file">/api/tags</code> yang berbeda dari path sebenarnya; badge build di README menunjuk fork Travis lama.</p>
+<code class="file">src/app/routes/article/article.controller.ts:83</code> <code class="file">src/app/routes/tag/tag.controller.ts:10</code> <code class="file">README.md:3</code>
+</div>
+</div>
+<p>Dependency utama sudah lama (Prisma 4, Express 4, Nx 17). Audit dependency belum dilakukan; saya bisa melakukannya bila diminta.</p>
+      </section>
+      <section id="getting-started"><h2>Getting Started</h2>
+<p class="lead">Butuh Node.js, PostgreSQL, dan tiga variabel environment; setelah install, generate Prisma client, jalankan migrasi, lalu <code>nx serve api</code>.</p>
+<p>Prasyarat: Node.js (versi tidak dipin; Dockerfile memakai <code>node:lts-alpine</code>) dan sebuah database PostgreSQL. Variabel yang dibutuhkan (hanya nama): <code>DATABASE_URL</code>, <code>JWT_SECRET</code>, <code>NODE_ENV</code>; opsional <code>PORT</code> (default 3000) dan <code>HOST</code>. Repo tidak punya <code>.env.example</code>; daftar di atas diambil dari <code class="file">README.md</code> dan kode.</p>
+<ol class="steps">
+<li><h4>Install dependency</h4><p>Dari root repo.</p><pre class="code">npm install</pre></li>
+<li><h4>Siapkan environment</h4><p>Buat file <code>.env</code> di root berisi <code>DATABASE_URL</code>, <code>JWT_SECRET</code>, <code>NODE_ENV</code> (isi sendiri; jangan di-commit).</p></li>
+<li><h4>Generate Prisma client</h4><p>Membuat tipe dari <code class="file">src/prisma/schema.prisma</code>.</p><pre class="code">npx prisma generate</pre></li>
+<li><h4>Terapkan migrasi</h4><p>Membuat atau memperbarui tabel.</p><pre class="code">npx prisma migrate deploy</pre></li>
+<li><h4>Jalankan server</h4><p>Server mendengarkan di port 3000 dan API di <code class="file">/api</code>.</p><pre class="code">npx nx serve api</pre></li>
+<li><h4>Isi data demo (opsional)</h4><p>Menjalankan <code class="file">src/prisma/seed.ts</code>.</p><pre class="code">npx prisma db seed</pre></li>
+<li><h4>Jalankan test</h4><p>Unit test jest memakai mock Prisma (<code class="file">src/tests/prisma-mock.ts</code>); test e2e di <code class="file">e2e/</code> butuh server hidup dan saat ini basi.</p><pre class="code">npx nx test api</pre></li>
+<li><h4>Build dan deploy</h4><p>Perintah deploy dari README; Docker memakai <code>npx nx docker-build api</code> setelah build.</p><pre class="code">npm ci &amp;&amp; npx prisma migrate deploy &amp;&amp; node dist/api/main.js</pre></li>
+</ol>
+<p>File minimum yang tidak ada: <code>.env.example</code>, <code class="file">docker-compose.yml</code>, <code>Makefile</code>, <code>Procfile</code>, dan CI config (<code class="file">.github/</code>, <code class="file">.gitlab-ci.yml</code>, dan sejenisnya). Karena itu langkah di atas bersumber dari <code class="file">README.md</code>, <code class="file">project.json</code>, dan <code class="file">package.json</code>.</p>
+      </section>
+      <section id="questions"><h2>Open Questions &amp; Glossary</h2>
+<p class="lead">Ada beberapa keputusan desain dan operasional yang tidak bisa dipastikan dari kode dan perlu dikonfirmasi ke tim sebelumnya; istilah domain relatif sedikit karena mengikuti RealWorld.</p>
+<h3>Open questions</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name">Apakah filter visibilitas <code>demo</code> disengaja?</span></div>
+<p>Listing hanya menampilkan konten user demo dan milik sendiri, sedangkan detail artikel tidak disaring. Perlu tahu tujuan bisnisnya.</p>
+<code class="file">src/app/routes/article/article.service.ts:13-25</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Bagaimana deployment production dilakukan?</span></div>
+<p>Tidak ada CI, IaC, atau docker-compose; hanya Dockerfile Nx dan perintah di README. Siapa yang menjalankan migrasi dan di mana?</p>
+<code class="file">Dockerfile</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Apakah <code>prisma generate</code> dijalankan saat build image?</span></div>
+<p>Dockerfile tidak memuatnya; belum jelas bagaimana client tersedia di runtime.</p>
+<code class="file">Dockerfile:22</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Apakah ada data atau klien yang bergantung pada slug lama?</span></div>
+<p>Slug berubah saat judul diedit dan URL lama jadi 404.</p>
+<code class="file">src/app/routes/article/article.service.ts:316-333</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Di mana frontend dan nilai <code>JWT_SECRET</code> production?</span></div>
+<p>Repo ini hanya API; konfirmasi klien yang memakainya dan pengelolaan secret.</p>
+<code class="file">README.md</code>
+</div>
+</div>
+<h3>Glossary</h3>
+<div class="items">
+<div class="item">
+<div class="item-head"><span class="item-name">RealWorld / Conduit</span></div>
+<p>Spesifikasi API lintas-bahasa untuk klon Medium; "Conduit" adalah nama aplikasinya.</p>
+<code class="file">README.md</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Slug</span></div>
+<p>Pengenal artikel di URL: judul yang di-slugify ditambah <code>-&lt;authorId&gt;</code>.</p>
+<code class="file">src/app/routes/article/article.service.ts:178</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Demo user</span></div>
+<p>User dengan <code>demo = true</code>, dibuat oleh seed; kontennya terlihat oleh semua orang di listing.</p>
+<code class="file">src/prisma/schema.prisma:55</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Feed</span></div>
+<p>Daftar artikel dari penulis yang di-follow user login.</p>
+<code class="file">src/app/routes/article/article.service.ts:113</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Favorite</span></div>
+<p>Relasi user menandai artikel; jumlahnya tampil sebagai <code>favoritesCount</code>.</p>
+<code class="file">src/app/routes/article/article.mapper.ts:12</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name">Profile</span></div>
+<p>Tampilan publik user (username, bio, image, <code>following</code>).</p>
+<code class="file">src/app/routes/profile/profile.utils.ts</code>
+</div>
+<div class="item">
+<div class="item-head"><span class="item-name"><code>auth.required</code> / <code>auth.optional</code></span></div>
+<p>Dua middleware JWT: wajib token atau token opsional.</p>
+<code class="file">src/app/routes/auth/auth.ts:14-24</code>
+</div>
+</div>
+      </section>
+    </article>
+  </main>
+</div>
+<script>
+  const icon = d => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+  // Heading anchors
+  document.querySelectorAll("section").forEach(sec => {
+    sec.querySelectorAll("h2, h3").forEach((h, i) => {
+      if (!h.id) h.id = h.tagName === "H2" ? sec.id + "-title" : `${sec.id}-${i}`;
+      const target = h.tagName === "H2" ? sec.id : h.id;
+      h.insertAdjacentHTML("afterbegin", `<a class="anchor" href="#${target}" aria-label="Link to this heading">${icon('<path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.5 3.5 0 0 0 5 5l1-1"/>')}</a>`);
+    });
+  });
+
+  // Tables: scroll wrapper + optional filter
+  document.querySelectorAll("table").forEach(t => {
+    const wrap = document.createElement("div"); wrap.className = "table-wrap";
+    t.replaceWith(wrap); wrap.appendChild(t);
+    if (!t.classList.contains("filterable")) return;
+    const rows = [...t.querySelectorAll("tbody tr")];
+    const bar = document.createElement("div"); bar.className = "filter";
+    bar.innerHTML = `<label>${icon('<circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3.5 3.5"/>')}<input type="search" placeholder="Filter rows" aria-label="Filter table rows"></label><output aria-live="polite"></output>`;
+    wrap.before(bar);
+    const input = bar.querySelector("input"), count = bar.querySelector("output");
+    const empty = document.createElement("tr"); empty.className = "empty"; empty.hidden = true;
+    empty.innerHTML = `<td colspan="${t.rows[0]?.cells.length || 1}">No rows match</td>`;
+    t.tBodies[0]?.appendChild(empty);
+    const apply = () => {
+      const q = input.value.trim().toLowerCase(); let shown = 0;
+      rows.forEach(r => { r.hidden = !r.textContent.toLowerCase().includes(q); if (!r.hidden) shown++; });
+      empty.hidden = shown > 0;
+      count.textContent = q ? `${shown} of ${rows.length}` : `${rows.length} rows`;
+    };
+    input.addEventListener("input", apply); apply();
+  });
+
+  // Code blocks: copy button
+  document.querySelectorAll("pre.code").forEach(pre => {
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const btn = document.createElement("button");
+    btn.className = "copy"; btn.type = "button"; btn.setAttribute("aria-label", "Copy code");
+    btn.innerHTML = `<span class="idle">${icon('<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>')}</span><span class="done">${icon('<path d="m4.5 10.5 3.5 3.5 7.5-8"/>')}</span>`;
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(pre.textContent); } catch { return; }
+      btn.classList.add("copied"); btn.setAttribute("aria-label", "Copied");
+      setTimeout(() => { btn.classList.remove("copied"); btn.setAttribute("aria-label", "Copy code"); }, 1500);
+    });
+    wrap.appendChild(btn);
+  });
+
+  // Sidebar: highlight the section in view
+  const nav = document.querySelector(".sidebar");
+  const links = [...nav.querySelectorAll("a")];
+  const sections = links.map(a => document.querySelector(a.hash)).filter(Boolean);
+  let active = null;
+  const markActive = () => {
+    const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+    let current = sections[0];
+    for (const s of sections) if (s.getBoundingClientRect().top <= innerHeight * 0.3) current = s;
+    if (atEnd) current = sections[sections.length - 1];
+    if (current === active) return;
+    active = current;
+    links.forEach(a => a.hash === "#" + current.id ? a.setAttribute("aria-current", "location") : a.removeAttribute("aria-current"));
+    const link = nav.querySelector("[aria-current]");
+    if (link && nav.scrollWidth > nav.clientWidth) nav.scrollTo({ left: link.offsetLeft - 16, behavior: "smooth" });
+  };
+  addEventListener("scroll", markActive, { passive: true }); markActive();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js" integrity="sha384-vDPV1LDXGIwjU5/gMUtHbn/WAmwRmOgkQpiq+Rm4d/BPTsdfpIUpvi2xVET6z85W" crossorigin="anonymous"></script>
+<script>
+  document.querySelectorAll("pre.mermaid").forEach(el => {
+    const src = el.textContent;
+    try { pele.mount(el, src); }
+    catch (e) { el.classList.add("error"); el.textContent = "Diagram renderer could not load (offline or blocked). Mermaid source:\n\n" + src; }
+  });
+</script>
+</body>
+</html>
