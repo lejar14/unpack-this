@@ -1,6 +1,20 @@
 # unpack-this
 
-An agent skill that unpacks a handed-over codebase into a handover report: business processes, feature inventory, system workflows (Mermaid), architecture, and technical gotchas. It writes both `docs/handover/HANDOVER.md` and an interactive `docs/handover/handover.html`.
+An agent skill that unpacks a handed-over codebase into a handover report. It writes both `docs/handover/HANDOVER.md` and an interactive, docs-style `docs/handover/handover.html`.
+
+The report follows a lightweight [arc42](https://arc42.org) outline with [C4](https://c4model.com) diagrams, ordered by the questions a new owner asks:
+
+1. **Overview**: what it is and what it is built with
+2. **System Context**: actors and external systems
+3. **Business Processes**: end-to-end flow and business rules
+4. **Feature Inventory**: modules, features, code locations
+5. **Architecture & Runtime Flows**: building blocks and critical sequences
+6. **Data Model**: core entities and status lifecycle
+7. **Risks & Technical Debt**: findings by severity
+8. **Getting Started**: running it locally
+9. **Open Questions & Glossary**
+
+Every claim cites a file path; anything not confirmed by code is marked `inferred`.
 
 ## Install
 

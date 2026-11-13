@@ -1,25 +1,35 @@
 <!doctype html>
 <!--
-  unpack-this report template. Keep styles and scripts unchanged; only fill content.
+  unpack-this report template. Keep styles, scripts, and section ids unchanged; only fill content.
 
-  Placeholders: {{LANG}} {{PROJECT_NAME}} {{PURPOSE}} {{REPO_PATH}} {{GENERATED_DATE}} {{STACK_SUMMARY}}
-    {{PURPOSE}}        one sentence: what the application is for
+  Placeholders: {{LANG}} {{PROJECT_NAME}} {{PURPOSE}} {{REPO_PATH}} {{STACK_SUMMARY}} {{GENERATED_DATE}}
+    {{PURPOSE}}        one or two sentences: what the application is for
     {{STACK_SUMMARY}}  short, e.g. "Laravel 10 · MySQL · Redis"
 
   Components (use only these):
-    Paragraph:    <p>...</p>  (prose column is capped at a readable width)
-    Facts list:   <dl class="facts"><div><dt>Framework</dt><dd>Laravel 10</dd></div>...</dl>
-    Badge:        <span class="badge">Laravel 10</span>  variants: .ok .warn .risk
-    Inferred:     <span class="badge warn">inferred</span>
-    File ref:     <code class="file">app/Http/Controllers/OrderController.php:42</code>
-    Note:         <div class="note"><strong>Title</strong><p>Text</p></div>  variants: .warn .risk
-    Flow steps:   <ol class="flow"><li>Register</li><li>Order</li><li>Pay</li></ol>
-    Table:        <table class="filterable"> gets a filter box; plain <table> does not
-    Finding:      <div class="finding risk"><span class="sev">High</span><div><h4>Title</h4><p>Text</p><code class="file">path</code></div></div>
-                  variants: .risk .warn .info  (sev label text in the report language)
-    Collapsible:  <details><summary>Title</summary><div>...</div></details>
-    Diagram:      <figure><pre class="mermaid">sequenceDiagram ...</pre><figcaption>Checkout flow</figcaption></figure>
-                  (Mermaid syntax, rendered by Pele)
+    Section summary  <p class="lead">One or two sentences that answer the section's question.</p>
+    Paragraph        <p>...</p>   Sub-heading <h3>...</h3>
+    Facts            <dl class="facts"><div><dt>Framework</dt><dd>Laravel 10</dd></div>...</dl>
+    Badge            <span class="badge">text</span>  variants: .ok .warn .risk
+    Inferred         <span class="badge warn">inferred</span>
+    File ref         <code class="file">app/Services/OrderService.php:42</code>
+    Callout          <div class="callout"><p><strong>Title.</strong> Text</p></div>  variants: .warn .risk
+    Flow             <ol class="flow"><li>Register</li><li>Order</li><li>Pay</li></ol>
+    Steps            <ol class="steps"><li><h4>Install</h4><p>...</p><pre class="code">composer install</pre></li></ol>
+    Table            <table>...</table>; add class="filterable" for a filter box (feature inventory)
+    Item list        <div class="items">
+                       <div class="item">
+                         <div class="item-head"><span class="item-name">orders</span><span class="item-meta">table</span><span class="badge risk">High</span></div>
+                         <p>Description.</p>
+                         <code class="file">path</code>
+                       </div>
+                     </div>
+                     Use for entities, actors, external systems, findings, open questions, glossary.
+                     Wrap code-like names in <code> inside .item-name.
+    Code block       <pre class="code">php artisan migrate</pre>  (gets a copy button)
+    Collapsible      <details><summary>Title</summary><div>...</div></details>
+    Diagram          <figure><pre class="mermaid">flowchart LR ...</pre><figcaption>Caption</figcaption></figure>
+                     (Mermaid syntax, rendered by Pele)
 -->
 <html lang="{{LANG}}">
 <head>
@@ -29,213 +39,282 @@
 <title>{{PROJECT_NAME}} · Handover Report</title>
 <style>
   :root {
-    --ground: #f3f4f1; --paper: #fbfbf9; --ink: #161b18; --ink-2: #4a524d; --line: #d3d8d2; --rule: #161b18;
-    --accent: #0d5e50; --accent-tint: #dfebe6;
-    --ok: #2a6a3c; --ok-tint: #e1eee4; --warn: #865700; --warn-tint: #f6ecd8; --risk: #a3271d; --risk-tint: #f7e3df;
+    --bg: #ffffff; --side: #f6f9fc; --heading: #0a2540; --text: #425466; --muted: #5b6b7f; --line: #e3e8ee;
+    --accent: #4f46e5; --accent-strong: #3b32c9; --accent-tint: #efeefe;
+    --ok: #0e6245; --ok-tint: #d7f7e3; --warn: #8a3a05; --warn-tint: #fdf0c8; --risk: #a41c4e; --risk-tint: #ffe7f0;
+    --code-bg: #0a2540; --code-text: #e3e8ee; --code-muted: #8da4bf;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-    --measure: 70ch;
+    --header: 60px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --ground: #111513; --paper: #171c19; --ink: #e4e9e5; --ink-2: #a2aca5; --line: #2c342f; --rule: #e4e9e5;
-      --accent: #72c8b1; --accent-tint: #173029;
-      --ok: #80cf98; --ok-tint: #18291e; --warn: #e2b050; --warn-tint: #2c2414; --risk: #f08b80; --risk-tint: #321c19;
+      --bg: #0c1424; --side: #101a2d; --heading: #f6f9fc; --text: #c1c9d2; --muted: #95a2b3; --line: #233150;
+      --accent: #a29dff; --accent-strong: #bdb9ff; --accent-tint: #1d2150;
+      --ok: #7ee2a8; --ok-tint: #10301f; --warn: #f5c46b; --warn-tint: #33260b; --risk: #ff8fb5; --risk-tint: #3a1324;
+      --code-bg: #060c18; --code-text: #e3e8ee; --code-muted: #7d8da3;
     }
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scrollbar-color: var(--line) transparent; }
-  body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; caret-color: var(--accent); }
-  ::selection { background: var(--accent); color: var(--paper); }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
-  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header) + 16px); scrollbar-color: var(--line) transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; caret-color: var(--accent); }
+  ::selection { background: var(--accent-tint); color: var(--heading); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  a:hover { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
-  /* Frame */
-  .layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
-  nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 28px 20px; background: var(--paper); border-right: 1px solid var(--line); }
-  nav .project { font-weight: 650; font-size: 15px; line-height: 1.3; letter-spacing: -0.01em; }
-  nav .doc { color: var(--ink-2); font-size: 13px; margin: 2px 0 28px; }
-  nav ol { list-style: none; margin: 0; padding: 0; counter-reset: nav; }
-  nav li { counter-increment: nav; }
-  nav a { display: grid; grid-template-columns: 22px 1fr; padding: 7px 10px 7px 8px; margin-left: -8px; border-radius: 6px; color: var(--ink-2); text-decoration: none; font-size: 14px; line-height: 1.35; transition: color .15s, background-color .15s; }
-  nav a::before { content: counter(nav); font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .7; font-weight: 600; transition: color .15s; }
-  nav a:hover { color: var(--ink); background: var(--ground); }
-  nav a[aria-current] { color: var(--ink); font-weight: 600; background: var(--accent-tint); }
-  nav a[aria-current]::before { color: var(--accent); }
-  main { padding: 40px clamp(20px, 5vw, 64px) 96px; max-width: 1180px; }
+  /* Header */
+  .topbar { position: sticky; top: 0; z-index: 3; height: var(--header); display: flex; align-items: center; gap: 14px; padding: 0 24px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
+  .topbar .project { font-weight: 650; color: var(--heading); letter-spacing: -0.01em; }
+  .topbar .sep { width: 1px; height: 20px; background: var(--line); }
+  .topbar .doc { color: var(--muted); font-size: 14px; }
+  .topbar .date { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 
-  /* Title block: the drawing-sheet masthead */
-  .titleblock { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); border: 1.5px solid var(--rule); background: var(--paper); margin-bottom: 56px; }
-  .titleblock .name { padding: 24px 28px 26px; border-right: 1.5px solid var(--rule); }
-  .titleblock h1 { margin: 0; font-size: 34px; line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; text-wrap: balance; }
-  .titleblock .purpose { margin: 12px 0 0; color: var(--ink-2); font-size: 17px; line-height: 1.5; max-width: 52ch; }
-  .titleblock dl { margin: 0; display: grid; grid-auto-rows: 1fr; }
-  .titleblock dl div { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-  .titleblock dl div:last-child { border-bottom: 0; }
-  .titleblock dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
-  .titleblock dd { margin: 2px 0 0; font-size: 14px; font-weight: 550; overflow-wrap: anywhere; }
+  /* Shell */
+  .shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); }
+  .sidebar { position: sticky; top: var(--header); height: calc(100vh - var(--header)); overflow-y: auto; padding: 28px 16px 40px 24px; background: var(--side); border-right: 1px solid var(--line); }
+  .sidebar h2 { margin: 22px 0 6px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--heading); }
+  .sidebar h2:first-child { margin-top: 0; }
+  .sidebar ul { list-style: none; margin: 0; padding: 0; }
+  .sidebar a { display: block; padding: 5px 10px; margin-left: -10px; border-radius: 6px; color: var(--text); font-size: 14px; font-weight: 450; line-height: 1.4; transition: color .15s, background-color .15s; }
+  .sidebar a:hover { color: var(--heading); background: color-mix(in srgb, var(--line) 55%, transparent); text-decoration: none; }
+  .sidebar a[aria-current] { color: var(--accent); background: var(--accent-tint); font-weight: 600; }
+
+  main { padding: 48px clamp(20px, 5vw, 72px) 120px; min-width: 0; }
+  article { max-width: 880px; }
+
+  /* Page header */
+  .page-head { padding-bottom: 32px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; color: var(--heading); font-size: 36px; line-height: 1.15; letter-spacing: -0.025em; font-weight: 700; text-wrap: balance; }
+  .page-head .purpose { margin: 14px 0 22px; font-size: 19px; line-height: 1.55; max-width: 62ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; font-size: 14px; }
+  .meta div { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; color: var(--heading); font-weight: 550; overflow-wrap: anywhere; }
 
   /* Sections */
-  section { padding-top: 22px; border-top: 1.5px solid var(--rule); margin-bottom: 64px; scroll-margin-top: 24px; }
-  h2 { margin: 0 0 20px; font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; text-wrap: balance; }
-  h3 { margin: 36px 0 10px; font-size: 19px; line-height: 1.3; letter-spacing: -0.01em; font-weight: 650; }
-  h4 { margin: 0 0 4px; font-size: 16px; line-height: 1.35; font-weight: 650; }
-  section > p, section > ul, section > ol:not(.flow), details p, .note p { max-width: var(--measure); }
-  p { margin: 0 0 14px; }
-  ul, ol { padding-left: 22px; margin: 0 0 14px; }
+  section { padding-top: 48px; }
+  section + section { margin-top: 24px; border-top: 1px solid var(--line); }
+  h2 { position: relative; margin: 0 0 10px; color: var(--heading); font-size: 26px; line-height: 1.25; letter-spacing: -0.02em; font-weight: 700; }
+  h3 { position: relative; margin: 36px 0 10px; color: var(--heading); font-size: 19px; line-height: 1.35; letter-spacing: -0.01em; font-weight: 650; }
+  h4 { margin: 0 0 4px; color: var(--heading); font-size: 16px; font-weight: 650; }
+  .anchor { position: absolute; left: -26px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; display: grid; place-items: center; color: var(--muted); opacity: 0; transition: opacity .15s; }
+  .anchor svg { width: 15px; height: 15px; }
+  h2:hover .anchor, h3:hover .anchor, .anchor:focus-visible { opacity: 1; }
+  p { margin: 0 0 16px; max-width: 70ch; }
+  p.lead { font-size: 18px; line-height: 1.6; color: var(--text); margin-bottom: 24px; }
+  ul, ol { padding-left: 22px; margin: 0 0 16px; max-width: 70ch; }
   li { margin: 4px 0; }
-  li::marker { color: var(--ink-2); }
-  code { font-family: var(--mono); font-size: .86em; }
-  :not(pre) > code:not(.file) { background: var(--paper); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
-  code.file { color: var(--accent); background: var(--accent-tint); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+  li::marker { color: var(--muted); }
+  strong { color: var(--heading); font-weight: 600; }
+  code { font-family: var(--mono); font-size: .875em; }
+  :not(pre) > code:not(.file) { color: var(--heading); background: var(--side); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; }
+  code.file { color: var(--accent); background: var(--accent-tint); padding: 2px 6px; border-radius: 5px; overflow-wrap: anywhere; }
 
-  /* Facts list */
-  dl.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin: 0 0 18px; border-top: 1px solid var(--line); }
-  dl.facts div { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--line); }
-  dl.facts dt { font-size: 13px; color: var(--ink-2); }
-  dl.facts dd { margin: 2px 0 0; font-weight: 550; }
+  /* Facts */
+  dl.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 32px; margin: 0 0 20px; }
+  dl.facts div { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  dl.facts dt { font-size: 13px; color: var(--muted); }
+  dl.facts dd { margin: 2px 0 0; color: var(--heading); font-weight: 550; }
 
   /* Badges */
-  .badge { display: inline-block; padding: 0 7px; border-radius: 4px; font-size: 12px; line-height: 20px; font-weight: 600; background: var(--accent-tint); color: var(--accent); vertical-align: 1px; white-space: nowrap; }
+  .badge { display: inline-block; padding: 0 7px; border-radius: 5px; font-size: 12px; line-height: 20px; font-weight: 600; background: var(--accent-tint); color: var(--accent); vertical-align: 1px; white-space: nowrap; }
   .badge.ok { background: var(--ok-tint); color: var(--ok); }
   .badge.warn { background: var(--warn-tint); color: var(--warn); }
   .badge.risk { background: var(--risk-tint); color: var(--risk); }
 
-  /* Note */
-  .note { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 14px 18px; margin: 18px 0; max-width: calc(var(--measure) + 40px); }
-  .note > strong { display: block; font-size: 14px; margin-bottom: 2px; }
-  .note.warn { background: var(--warn-tint); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
-  .note.warn > strong { color: var(--warn); }
-  .note.risk { background: var(--risk-tint); border-color: color-mix(in srgb, var(--risk) 30%, transparent); }
-  .note.risk > strong { color: var(--risk); }
-  .note p:last-child { margin-bottom: 0; }
+  /* Callouts */
+  .callout { position: relative; margin: 20px 0 24px; padding: 14px 18px 14px 46px; border-radius: 8px; background: var(--accent-tint); color: var(--heading); max-width: 76ch; }
+  .callout::before { content: ""; position: absolute; left: 16px; top: 17px; width: 18px; height: 18px; background: var(--accent);
+    -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat;
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm0 4a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Zm1.2 9.5H8.8v-1.5h.6V10h-.6V8.5h2.1v5h.3V15Z'/%3E%3C/svg%3E"); }
+  .callout.warn { background: var(--warn-tint); }
+  .callout.warn::before { background: var(--warn); --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.6 2.4a1.6 1.6 0 0 1 2.8 0l7.2 12.9a1.6 1.6 0 0 1-1.4 2.4H2.8a1.6 1.6 0 0 1-1.4-2.4L8.6 2.4ZM9 7v4.5h2V7H9Zm1 6.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z'/%3E%3C/svg%3E"); }
+  .callout.risk { background: var(--risk-tint); }
+  .callout.risk::before { background: var(--risk); --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm-1 4h2v6H9v-6Zm1 7.7a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z'/%3E%3C/svg%3E"); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 8px; }
 
-  /* Flow steps: numbered stations on one line */
-  ol.flow { list-style: none; padding: 0; margin: 20px 0 28px; display: flex; flex-wrap: wrap; row-gap: 14px; counter-reset: step; }
-  ol.flow li { counter-increment: step; display: flex; align-items: center; margin: 0; font-weight: 600; font-size: 15px; }
-  ol.flow li::before { content: counter(step); display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border: 1.5px solid var(--accent); border-radius: 50%; color: var(--accent); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  ol.flow li:not(:last-child)::after { content: ""; width: 36px; height: 1.5px; margin: 0 12px; background: var(--ink-2); opacity: .5; }
+  /* Flow */
+  ol.flow { list-style: none; padding: 0; margin: 8px 0 28px; display: flex; flex-wrap: wrap; align-items: center; row-gap: 12px; counter-reset: flow; max-width: none; }
+  ol.flow li { counter-increment: flow; display: flex; align-items: center; margin: 0; color: var(--heading); font-weight: 600; font-size: 15px; }
+  ol.flow li::before { content: counter(flow); display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; background: var(--accent-tint); color: var(--accent); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  ol.flow li:not(:last-child)::after { content: ""; width: 28px; height: 1px; margin: 0 12px; background: var(--muted); opacity: .6; }
+
+  /* Steps */
+  ol.steps { list-style: none; padding: 0; margin: 8px 0 24px; counter-reset: step; max-width: none; }
+  ol.steps > li { position: relative; counter-increment: step; margin: 0; padding: 0 0 26px 44px; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--heading); font-size: 13px; font-weight: 700; }
+  ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 34px; bottom: 6px; width: 1px; background: var(--line); }
+  ol.steps h4 { line-height: 28px; margin-bottom: 2px; }
 
   /* Tables */
-  .table-wrap { overflow-x: auto; margin: 0 0 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
-  table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .table-wrap { overflow-x: auto; margin: 4px 0 24px; }
+  table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--heading); font-size: 13px; font-weight: 600; white-space: nowrap; border-bottom-color: color-mix(in srgb, var(--heading) 25%, transparent); }
+  td:first-child { color: var(--heading); font-weight: 600; }
   td code.file { overflow-wrap: normal; white-space: nowrap; }
-  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tbody tr:last-child td { border-bottom: 0; }
-  th { position: sticky; top: 0; background: var(--paper); font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
-  tbody tr:hover { background: var(--ground); }
-  td:first-child { font-weight: 600; }
-  .filter { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
-  .filter input { width: min(100%, 320px); padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; }
-  .filter input:focus-visible { border-color: var(--accent); outline-offset: 0; }
-  .filter output { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  tr.empty td { color: var(--ink-2); font-weight: 400; text-align: center; }
+  .filter { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
+  .filter label { position: relative; flex: 0 1 300px; }
+  .filter svg { position: absolute; left: 11px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .filter input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--heading); font: inherit; font-size: 14px; box-shadow: 0 1px 2px rgba(10, 37, 64, .06); transition: border-color .15s, box-shadow .15s; }
+  .filter input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+  .filter output { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.empty td { color: var(--muted); font-weight: 400; text-align: center; padding: 20px; }
 
-  /* Findings */
-  .finding { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .finding:first-of-type { border-top: 1px solid var(--line); }
-  .finding .sev { align-self: start; text-align: center; padding: 2px 0; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--accent-tint); color: var(--accent); }
-  .finding.risk .sev { background: var(--risk-tint); color: var(--risk); }
-  .finding.warn .sev { background: var(--warn-tint); color: var(--warn); }
-  .finding p { max-width: var(--measure); margin-bottom: 6px; }
+  /* Item list */
+  .items { margin: 4px 0 24px; border-top: 1px solid var(--line); }
+  .item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-bottom: 4px; }
+  .item-name { color: var(--heading); font-weight: 650; }
+  .item-name code { background: none !important; border: 0 !important; padding: 0 !important; font-size: .94em; }
+  .item-meta { color: var(--muted); font-size: 13px; }
+  .item p { margin-bottom: 6px; }
+  .item p:last-child { margin-bottom: 0; }
+
+  /* Code blocks */
+  .codewrap { position: relative; margin: 8px 0 16px; }
+  pre.code { margin: 0; padding: 14px 52px 14px 18px; border-radius: 8px; background: var(--code-bg); color: var(--code-text); font: 13.5px/1.6 var(--mono); overflow-x: auto; white-space: pre; }
+  .copy { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--code-muted); cursor: pointer; transition: color .15s, background-color .15s; }
+  .copy:hover { color: var(--code-text); background: rgba(255, 255, 255, .08); }
+  .copy svg { width: 16px; height: 16px; }
+  .copy .done { display: none; }
+  .copy.copied .idle { display: none; }
+  .copy.copied .done { display: block; color: #7ee2a8; }
 
   /* Collapsible */
-  details { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0; background: var(--paper); }
-  details summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 10px; }
+  details { margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; }
+  details summary { cursor: pointer; padding: 12px 16px; color: var(--heading); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 10px; }
   details summary::-webkit-details-marker { display: none; }
-  details summary::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--ink-2); border-bottom: 1.5px solid var(--ink-2); transform: rotate(-45deg); transition: transform .15s; flex: none; }
+  details summary::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; flex: none; }
   details[open] summary::before { transform: rotate(45deg); }
   details > div { padding: 0 16px 14px 33px; }
 
   /* Diagrams */
-  figure { margin: 20px 0 32px; }
-  figcaption { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+  figure { margin: 16px 0 32px; }
+  figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); }
   pre.mermaid {
-    margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 24px; overflow-x: auto; text-align: center;
-    --pele-bg: var(--paper); --pele-fg: var(--ink); --pele-muted: var(--ink-2); --pele-line: var(--ink-2);
-    --pele-surface: var(--ground); --pele-surface-alt: var(--accent-tint); --pele-border: var(--line);
+    margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--side); overflow-x: auto; text-align: center;
+    --pele-bg: var(--side); --pele-fg: var(--heading); --pele-muted: var(--muted); --pele-line: var(--muted);
+    --pele-surface: var(--bg); --pele-surface-alt: var(--accent-tint); --pele-border: var(--line);
     --pele-accent: var(--accent); --pele-error: var(--risk); --pele-font: var(--sans); --pele-font-mono: var(--mono);
   }
-  pre.mermaid.error { text-align: left; white-space: pre-wrap; font-size: 13px; color: var(--ink-2); border-color: var(--risk); }
+  pre.mermaid.error { text-align: left; white-space: pre-wrap; font: 13px/1.6 var(--mono); color: var(--muted); }
 
-  @media (max-width: 860px) {
-    .layout { grid-template-columns: minmax(0, 1fr); }
-    nav { position: sticky; top: 0; z-index: 2; height: auto; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
-    nav .project, nav .doc { display: none; }
-    nav ol { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-    nav a { margin: 0; white-space: nowrap; grid-template-columns: 18px auto; }
-    main { padding-top: 24px; }
-    section { scroll-margin-top: 64px; }
-    .titleblock { grid-template-columns: 1fr; margin-bottom: 40px; }
-    .titleblock .name { border-right: 0; border-bottom: 1.5px solid var(--rule); padding: 20px; }
-    .titleblock h1 { font-size: 28px; }
-    .finding { grid-template-columns: 1fr; gap: 8px; }
-    .finding .sev { justify-self: start; padding: 2px 8px; }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: sticky; top: var(--header); z-index: 2; height: auto; padding: 8px 16px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-right: 0; border-bottom: 1px solid var(--line); }
+    .sidebar h2 { display: none; }
+    .sidebar ul { display: contents; }
+    .sidebar a { margin: 0; white-space: nowrap; }
+    html { scroll-padding-top: calc(var(--header) + 64px); }
+    .topbar .date { display: none; }
+    main { padding-top: 32px; }
+    h1 { font-size: 30px; }
+    .anchor { display: none; }
   }
   @media print {
-    nav, .filter { display: none; }
-    .layout { display: block; }
-    body { background: #fff; }
-    section, figure, .finding { break-inside: avoid; }
+    .topbar, .sidebar, .filter, .copy, .anchor { display: none; }
+    .shell { display: block; }
+    section, figure, .item, ol.steps > li { break-inside: avoid; }
   }
 </style>
 </head>
 <body>
-<div class="layout">
-  <nav aria-label="Report sections">
-    <div class="project">{{PROJECT_NAME}}</div>
-    <div class="doc">Handover report</div>
-    <ol>
-      <li><a href="#summary">Executive Summary</a></li>
-      <li><a href="#business-process">Business Process</a></li>
+<header class="topbar">
+  <span class="project">{{PROJECT_NAME}}</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="doc">Handover report</span>
+  <span class="date">{{GENERATED_DATE}}</span>
+</header>
+<div class="shell">
+  <nav class="sidebar" aria-label="Report sections">
+    <h2>Product</h2>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#context">System Context</a></li>
+      <li><a href="#business">Business Processes</a></li>
       <li><a href="#features">Feature Inventory</a></li>
-      <li><a href="#workflows">System Workflows</a></li>
-      <li><a href="#gotchas">Handover Gotchas</a></li>
-    </ol>
+    </ul>
+    <h2>Engineering</h2>
+    <ul>
+      <li><a href="#architecture">Architecture &amp; Flows</a></li>
+      <li><a href="#data-model">Data Model</a></li>
+    </ul>
+    <h2>Taking over</h2>
+    <ul>
+      <li><a href="#risks">Risks &amp; Tech Debt</a></li>
+      <li><a href="#getting-started">Getting Started</a></li>
+      <li><a href="#questions">Open Questions &amp; Glossary</a></li>
+    </ul>
   </nav>
   <main>
-    <header class="titleblock">
-      <div class="name">
+    <article>
+      <div class="page-head">
         <h1>{{PROJECT_NAME}}</h1>
         <p class="purpose">{{PURPOSE}}</p>
+        <dl class="meta">
+          <div><dt>Repository</dt><dd><code>{{REPO_PATH}}</code></dd></div>
+          <div><dt>Stack</dt><dd>{{STACK_SUMMARY}}</dd></div>
+          <div><dt>Generated</dt><dd>{{GENERATED_DATE}}</dd></div>
+        </dl>
       </div>
-      <dl>
-        <div><dt>Document</dt><dd>Handover report</dd></div>
-        <div><dt>Repository</dt><dd><code>{{REPO_PATH}}</code></dd></div>
-        <div><dt>Stack</dt><dd>{{STACK_SUMMARY}}</dd></div>
-        <div><dt>Generated</dt><dd>{{GENERATED_DATE}}</dd></div>
-      </dl>
-    </header>
 
-    <section id="summary"><h2>Executive Summary &amp; Tech Stack</h2>
-      <!-- content -->
-    </section>
-    <section id="business-process"><h2>Business Process &amp; User Roles</h2>
-      <!-- content -->
-    </section>
-    <section id="features"><h2>Feature Inventory</h2>
-      <!-- content: <table class="filterable"> -->
-    </section>
-    <section id="workflows"><h2>System &amp; Technical Workflows</h2>
-      <!-- content: one <figure> per flow -->
-    </section>
-    <section id="gotchas"><h2>Handover Gotchas</h2>
-      <!-- content: .finding rows, then running locally and open questions -->
-    </section>
+      <section id="overview"><h2>Overview</h2>
+        <!-- p.lead, then purpose and dl.facts -->
+      </section>
+      <section id="context"><h2>System Context</h2>
+        <!-- p.lead, actors and external systems as .items, C4 context diagram -->
+      </section>
+      <section id="business"><h2>Business Processes</h2>
+        <!-- p.lead, ol.flow, process paragraphs, business rules table -->
+      </section>
+      <section id="features"><h2>Feature Inventory</h2>
+        <!-- p.lead, table.filterable -->
+      </section>
+      <section id="architecture"><h2>Architecture &amp; Runtime Flows</h2>
+        <!-- p.lead, container diagram, 2-3 sequence diagrams -->
+      </section>
+      <section id="data-model"><h2>Data Model</h2>
+        <!-- p.lead, entities as .items, erDiagram / stateDiagram-v2 -->
+      </section>
+      <section id="risks"><h2>Risks &amp; Technical Debt</h2>
+        <!-- p.lead, findings as .items with severity badge -->
+      </section>
+      <section id="getting-started"><h2>Getting Started</h2>
+        <!-- p.lead, ol.steps with pre.code -->
+      </section>
+      <section id="questions"><h2>Open Questions &amp; Glossary</h2>
+        <!-- p.lead, h3 + .items for questions, h3 + .items for glossary -->
+      </section>
+    </article>
   </main>
 </div>
 <script>
+  const icon = d => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+  // Heading anchors
+  document.querySelectorAll("section").forEach(sec => {
+    sec.querySelectorAll("h2, h3").forEach((h, i) => {
+      if (!h.id) h.id = h.tagName === "H2" ? sec.id + "-title" : `${sec.id}-${i}`;
+      const target = h.tagName === "H2" ? sec.id : h.id;
+      h.insertAdjacentHTML("afterbegin", `<a class="anchor" href="#${target}" aria-label="Link to this heading">${icon('<path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.5 3.5 0 0 0 5 5l1-1"/>')}</a>`);
+    });
+  });
+
+  // Tables: scroll wrapper + optional filter
   document.querySelectorAll("table").forEach(t => {
     const wrap = document.createElement("div"); wrap.className = "table-wrap";
     t.replaceWith(wrap); wrap.appendChild(t);
     if (!t.classList.contains("filterable")) return;
     const rows = [...t.querySelectorAll("tbody tr")];
     const bar = document.createElement("div"); bar.className = "filter";
-    bar.innerHTML = '<input type="search" placeholder="Filter rows" aria-label="Filter table rows"><output aria-live="polite"></output>';
+    bar.innerHTML = `<label>${icon('<circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3.5 3.5"/>')}<input type="search" placeholder="Filter rows" aria-label="Filter table rows"></label><output aria-live="polite"></output>`;
     wrap.before(bar);
-    const [input, count] = bar.children;
+    const input = bar.querySelector("input"), count = bar.querySelector("output");
     const empty = document.createElement("tr"); empty.className = "empty"; empty.hidden = true;
     empty.innerHTML = `<td colspan="${t.rows[0]?.cells.length || 1}">No rows match</td>`;
     t.tBodies[0]?.appendChild(empty);
@@ -248,14 +327,36 @@
     input.addEventListener("input", apply); apply();
   });
 
-  const links = [...document.querySelectorAll("nav a")];
+  // Code blocks: copy button
+  document.querySelectorAll("pre.code").forEach(pre => {
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const btn = document.createElement("button");
+    btn.className = "copy"; btn.type = "button"; btn.setAttribute("aria-label", "Copy code");
+    btn.innerHTML = `<span class="idle">${icon('<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>')}</span><span class="done">${icon('<path d="m4.5 10.5 3.5 3.5 7.5-8"/>')}</span>`;
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(pre.textContent); } catch { return; }
+      btn.classList.add("copied"); btn.setAttribute("aria-label", "Copied");
+      setTimeout(() => { btn.classList.remove("copied"); btn.setAttribute("aria-label", "Copy code"); }, 1500);
+    });
+    wrap.appendChild(btn);
+  });
+
+  // Sidebar: highlight the section in view
+  const nav = document.querySelector(".sidebar");
+  const links = [...nav.querySelectorAll("a")];
   const sections = links.map(a => document.querySelector(a.hash)).filter(Boolean);
+  let active = null;
   const markActive = () => {
     const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
     let current = sections[0];
     for (const s of sections) if (s.getBoundingClientRect().top <= innerHeight * 0.3) current = s;
     if (atEnd) current = sections[sections.length - 1];
+    if (current === active) return;
+    active = current;
     links.forEach(a => a.hash === "#" + current.id ? a.setAttribute("aria-current", "location") : a.removeAttribute("aria-current"));
+    const link = nav.querySelector("[aria-current]");
+    if (link && nav.scrollWidth > nav.clientWidth) nav.scrollTo({ left: link.offsetLeft - 16, behavior: "smooth" });
   };
   addEventListener("scroll", markActive, { passive: true }); markActive();
 </script>
