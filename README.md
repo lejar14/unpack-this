@@ -25,7 +25,7 @@ Open the inherited repo in your agent and ask, for example:
 | `docs/handover/HANDOVER.md` | Full report in Markdown with Mermaid diagrams |
 | `docs/handover/handover.html` | Same report as a self-contained page: sidebar nav, filterable tables, rendered diagrams, light/dark mode |
 
-The HTML loads Mermaid from jsDelivr, so diagrams need an internet connection to render.
+Diagrams use Mermaid syntax and are rendered by [Pele](https://pele.run) (pinned `1.13.0`, loaded from jsDelivr). Offline, each diagram falls back to showing its Mermaid source. `HANDOVER.md` keeps plain Mermaid blocks, so GitHub renders them natively.
 
 ## License
 

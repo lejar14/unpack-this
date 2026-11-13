@@ -12,7 +12,7 @@
     Flow steps:   <ol class="flow"><li>Register</li><li>Order</li><li>Pay</li></ol>
     Table:        <table class="filterable"> gets a search box automatically
     Collapsible:  <details><summary>Title</summary><div>...</div></details>
-    Mermaid:      <pre class="mermaid">sequenceDiagram ...</pre>
+    Diagram:      <pre class="mermaid">sequenceDiagram ...</pre>  (Mermaid syntax, rendered by Pele)
     Inferred tag: <span class="badge warn">inferred</span>
 -->
 <html lang="{{LANG}}">
@@ -75,7 +75,13 @@
   details { border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
   details summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
   details > div { padding: 0 14px 12px; }
-  pre.mermaid { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; text-align: center; }
+  pre.mermaid {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; text-align: center;
+    --pele-bg: var(--bg); --pele-fg: var(--text); --pele-muted: var(--muted); --pele-line: var(--muted);
+    --pele-surface: var(--surface); --pele-surface-alt: var(--info-bg); --pele-border: var(--border);
+    --pele-accent: var(--accent); --pele-error: var(--risk); --pele-font: var(--sans); --pele-font-mono: var(--mono);
+  }
+  pre.mermaid.error { text-align: left; white-space: pre-wrap; border-color: var(--risk); }
   @media (max-width: 800px) {
     .layout { grid-template-columns: 1fr; }
     nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
@@ -137,10 +143,13 @@
   }), { rootMargin: "-20% 0px -70% 0px" });
   document.querySelectorAll("section").forEach(s => obs.observe(s));
 </script>
-<script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-  mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "neutral", securityLevel: "strict" });
+<script src="https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js"></script>
+<script>
+  document.querySelectorAll("pre.mermaid").forEach(el => {
+    const src = el.textContent;
+    try { pele.mount(el, src); }
+    catch (e) { el.classList.add("error"); el.textContent = e.message + "\n\n" + src; }
+  });
 </script>
 </body>
 </html>
